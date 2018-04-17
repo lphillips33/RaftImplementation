@@ -1,0 +1,1 @@
+A sad attempt at implementation of Raft in Java.  To set up protocol buffers, go to google protocol buffer git hub page.  Download the zip file, and then follow the instructions in protobuf-3.5.1/README.md, protobuf-3.5.1/src/README.md/ and java/README.md.  
