@@ -17,8 +17,8 @@ public class Network {
 
     Node node;
 
-    public Network() {
-         node = new Node();
+    public Network(Node node) {
+         this.node = node;
     }
 
     //1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
