@@ -33,4 +33,13 @@ public class Candidate extends Node {
     }
 
 
+    @Override
+    public Boolean receiveAppendEntries() {
+        return null;
+    }
+
+    @Override
+    public Boolean receiveRequestVote() {
+        return null;
+    }
 }
