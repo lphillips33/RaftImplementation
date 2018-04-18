@@ -16,6 +16,12 @@ abstract public class Node {
         FOLLOWER, LEADER, CANDIDATE
     }
 
+    /*
+    public Role() {
+
+    }
+    */
+
 
     //All Servers:
 
