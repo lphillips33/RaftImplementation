@@ -25,8 +25,6 @@ public class Network {
     public void sendMessage(String destination, int type, int size, byte[] data) {
         //send destination, then type, then szie, then data
 
-
-
         InetAddress address = null;
         Socket socket = null;
         DataOutputStream dOut = null;
@@ -40,7 +38,6 @@ public class Network {
         } catch(Exception e) {
             e.printStackTrace();
         }
-
 
         switch (type) {
             case 1: //requestVote
