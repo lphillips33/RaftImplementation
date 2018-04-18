@@ -14,4 +14,13 @@ public class Follower extends Node {
         //transitions to candidate state
     }
 
+    @Override
+    public Boolean receiveAppendEntries() {
+        return null;
+    }
+
+    @Override
+    public Boolean receiveRequestVote() {
+        return null;
+    }
 }

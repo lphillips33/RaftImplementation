@@ -14,14 +14,25 @@ public class Leader extends Node {
 
     */
 
+    //if leaderCommit > follower commit, follower can update
     public void AppendEntries(long term, long leaderId, int prevLogIndex, String[] logEntries, int leaderCommit) {
             //currentTerm for leader to update itself
-            //success is true if follower cointained entry matching pervLogIndex and prevLogTerm
+            //success is true if follower contained entry matching pervLogIndex and prevLogTerm
 
     }
 
 
     public void sendHeartBeat(int term, Address leader) {
 
+    }
+
+    @Override
+    public Boolean receiveAppendEntries() {
+        return null;
+    }
+
+    @Override
+    public Boolean receiveRequestVote() {
+        return null;
     }
 }
