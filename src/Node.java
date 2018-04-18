@@ -75,7 +75,7 @@ public class Node {
 
         if(commitIndex > lastAppliedIndex) {
             lastAppliedIndex++;
-            apply(log[lastApplied]);
+            apply(log[lastAppliedIndex]);
         }
 
         //if RPC request or response contains term T > currentTerm:
@@ -92,7 +92,7 @@ public class Node {
 
         if(commitIndex > lastAppliedIndex) {
             lastAppliedIndex++;
-            apply(log[lastApplied]);
+            apply(log[lastAppliedIndex]);
         }
 
         //if RPC request or response contains term T > currentTerm:
@@ -132,8 +132,10 @@ public class Node {
 
         if(commitIndex > lastAppliedIndex) {
             lastAppliedIndex++;
-            apply(log[lastApplied]);
+            apply(log[lastAppliedIndex]);
         }
+
+        //HOW TO ACCESS RPC REQUEST?
 
         //if RPC request or response contains term T > currentTerm:
         //set currentTerm = t, convert to follower
