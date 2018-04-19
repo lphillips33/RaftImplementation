@@ -319,7 +319,7 @@ public class Node {
 
                         if(log.get(appendEntries.getPrevLogIndex()).getTerm() == appendEntries.getPrevLogTerm())
 
-                        
+
 
 
 

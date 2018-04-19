@@ -51,13 +51,13 @@ public final class AppendEntriesProtos {
     int getPrevLogIndex();
 
     /**
-     * <code>optional int32 prevLogterm = 4;</code>
+     * <code>optional int32 prevLogTerm = 4;</code>
      */
-    boolean hasPrevLogterm();
+    boolean hasPrevLogTerm();
     /**
-     * <code>optional int32 prevLogterm = 4;</code>
+     * <code>optional int32 prevLogTerm = 4;</code>
      */
-    int getPrevLogterm();
+    int getPrevLogTerm();
 
     /**
      * <code>optional int32 leaderCommit = 5;</code>
@@ -108,7 +108,7 @@ public final class AppendEntriesProtos {
       term_ = 0;
       leaderId_ = "";
       prevLogIndex_ = 0;
-      prevLogterm_ = 0;
+      prevLogTerm_ = 0;
       leaderCommit_ = 0;
       entries_ = java.util.Collections.emptyList();
     }
@@ -162,7 +162,7 @@ public final class AppendEntriesProtos {
             }
             case 32: {
               bitField0_ |= 0x00000008;
-              prevLogterm_ = input.readInt32();
+              prevLogTerm_ = input.readInt32();
               break;
             }
             case 40: {
@@ -925,18 +925,18 @@ public final class AppendEntriesProtos {
     }
 
     public static final int PREVLOGTERM_FIELD_NUMBER = 4;
-    private int prevLogterm_;
+    private int prevLogTerm_;
     /**
-     * <code>optional int32 prevLogterm = 4;</code>
+     * <code>optional int32 prevLogTerm = 4;</code>
      */
-    public boolean hasPrevLogterm() {
+    public boolean hasPrevLogTerm() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>optional int32 prevLogterm = 4;</code>
+     * <code>optional int32 prevLogTerm = 4;</code>
      */
-    public int getPrevLogterm() {
-      return prevLogterm_;
+    public int getPrevLogTerm() {
+      return prevLogTerm_;
     }
 
     public static final int LEADERCOMMIT_FIELD_NUMBER = 5;
@@ -1011,7 +1011,7 @@ public final class AppendEntriesProtos {
         output.writeInt32(3, prevLogIndex_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeInt32(4, prevLogterm_);
+        output.writeInt32(4, prevLogTerm_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeInt32(5, leaderCommit_);
@@ -1040,7 +1040,7 @@ public final class AppendEntriesProtos {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(4, prevLogterm_);
+          .computeInt32Size(4, prevLogTerm_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
@@ -1081,10 +1081,10 @@ public final class AppendEntriesProtos {
         result = result && (getPrevLogIndex()
             == other.getPrevLogIndex());
       }
-      result = result && (hasPrevLogterm() == other.hasPrevLogterm());
-      if (hasPrevLogterm()) {
-        result = result && (getPrevLogterm()
-            == other.getPrevLogterm());
+      result = result && (hasPrevLogTerm() == other.hasPrevLogTerm());
+      if (hasPrevLogTerm()) {
+        result = result && (getPrevLogTerm()
+            == other.getPrevLogTerm());
       }
       result = result && (hasLeaderCommit() == other.hasLeaderCommit());
       if (hasLeaderCommit()) {
@@ -1116,9 +1116,9 @@ public final class AppendEntriesProtos {
         hash = (37 * hash) + PREVLOGINDEX_FIELD_NUMBER;
         hash = (53 * hash) + getPrevLogIndex();
       }
-      if (hasPrevLogterm()) {
+      if (hasPrevLogTerm()) {
         hash = (37 * hash) + PREVLOGTERM_FIELD_NUMBER;
-        hash = (53 * hash) + getPrevLogterm();
+        hash = (53 * hash) + getPrevLogTerm();
       }
       if (hasLeaderCommit()) {
         hash = (37 * hash) + LEADERCOMMIT_FIELD_NUMBER;
@@ -1264,7 +1264,7 @@ public final class AppendEntriesProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         prevLogIndex_ = 0;
         bitField0_ = (bitField0_ & ~0x00000004);
-        prevLogterm_ = 0;
+        prevLogTerm_ = 0;
         bitField0_ = (bitField0_ & ~0x00000008);
         leaderCommit_ = 0;
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -1313,7 +1313,7 @@ public final class AppendEntriesProtos {
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
         }
-        result.prevLogterm_ = prevLogterm_;
+        result.prevLogTerm_ = prevLogTerm_;
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
           to_bitField0_ |= 0x00000010;
         }
@@ -1380,8 +1380,8 @@ public final class AppendEntriesProtos {
         if (other.hasPrevLogIndex()) {
           setPrevLogIndex(other.getPrevLogIndex());
         }
-        if (other.hasPrevLogterm()) {
-          setPrevLogterm(other.getPrevLogterm());
+        if (other.hasPrevLogTerm()) {
+          setPrevLogTerm(other.getPrevLogTerm());
         }
         if (other.hasLeaderCommit()) {
           setLeaderCommit(other.getLeaderCommit());
@@ -1580,34 +1580,34 @@ public final class AppendEntriesProtos {
         return this;
       }
 
-      private int prevLogterm_ ;
+      private int prevLogTerm_ ;
       /**
-       * <code>optional int32 prevLogterm = 4;</code>
+       * <code>optional int32 prevLogTerm = 4;</code>
        */
-      public boolean hasPrevLogterm() {
+      public boolean hasPrevLogTerm() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>optional int32 prevLogterm = 4;</code>
+       * <code>optional int32 prevLogTerm = 4;</code>
        */
-      public int getPrevLogterm() {
-        return prevLogterm_;
+      public int getPrevLogTerm() {
+        return prevLogTerm_;
       }
       /**
-       * <code>optional int32 prevLogterm = 4;</code>
+       * <code>optional int32 prevLogTerm = 4;</code>
        */
-      public Builder setPrevLogterm(int value) {
+      public Builder setPrevLogTerm(int value) {
         bitField0_ |= 0x00000008;
-        prevLogterm_ = value;
+        prevLogTerm_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 prevLogterm = 4;</code>
+       * <code>optional int32 prevLogTerm = 4;</code>
        */
-      public Builder clearPrevLogterm() {
+      public Builder clearPrevLogTerm() {
         bitField0_ = (bitField0_ & ~0x00000008);
-        prevLogterm_ = 0;
+        prevLogTerm_ = 0;
         onChanged();
         return this;
       }
@@ -1953,7 +1953,7 @@ public final class AppendEntriesProtos {
     java.lang.String[] descriptorData = {
       "\n\023AppendEntries.proto\022\004raft\"\312\001\n\rAppendEn" +
       "tries\022\014\n\004term\030\001 \001(\005\022\020\n\010leaderId\030\002 \001(\t\022\024\n" +
-      "\014prevLogIndex\030\003 \001(\005\022\023\n\013prevLogterm\030\004 \001(\005" +
+      "\014prevLogIndex\030\003 \001(\005\022\023\n\013prevLogTerm\030\004 \001(\005" +
       "\022\024\n\014leaderCommit\030\005 \001(\005\022*\n\007entries\030\006 \003(\0132" +
       "\031.raft.AppendEntries.Entry\032,\n\005Entry\022\022\n\nt" +
       "ermNumber\030\001 \001(\005\022\017\n\007message\030\002 \001(\tB%\n\016com." +
@@ -1976,7 +1976,7 @@ public final class AppendEntriesProtos {
     internal_static_raft_AppendEntries_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_raft_AppendEntries_descriptor,
-        new java.lang.String[] { "Term", "LeaderId", "PrevLogIndex", "PrevLogterm", "LeaderCommit", "Entries", });
+        new java.lang.String[] { "Term", "LeaderId", "PrevLogIndex", "PrevLogTerm", "LeaderCommit", "Entries", });
     internal_static_raft_AppendEntries_Entry_descriptor =
       internal_static_raft_AppendEntries_descriptor.getNestedTypes().get(0);
     internal_static_raft_AppendEntries_Entry_fieldAccessorTable = new
