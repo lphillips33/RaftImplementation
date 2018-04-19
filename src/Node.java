@@ -10,9 +10,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.reber.raft.AppendEntriesProtos.AppendEntries;
-import com.reber.raft.RequestVoteProtos.requestVote;
+import com.reber.raft.RequestVoteProtos.RequestVote;
 import com.reber.raft.RequestVoteResponseProtos;
-import com.reber.raft.RequestVoteResponseProtos.requestVoteResponse;
+import com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse;
 import com.reber.raft.AppendEntriesResponseProtos.AppendEntriesResponse;
 
 @SuppressWarnings("Duplicates")
@@ -75,7 +75,6 @@ public class Node {
 
             //dequeue here, send it correctly
 
-
             MessageWrapper tempMessage = null;
 
             if(!messages.isEmpty()) {
@@ -113,7 +112,7 @@ public class Node {
 
             int type = message.getMessageType();
             byte[] data = message.getData();
-            requestVote vote = requestVote.parseFrom(data);
+            RequestVote vote = RequestVote.parseFrom(data);
             int term = vote.getTerm();
 
 
@@ -145,7 +144,7 @@ public class Node {
 
             int type = message.getMessageType();
             byte[] data = message.getData();
-            requestVote vote = requestVote.parseFrom(data);
+            RequestVote vote = RequestVote.parseFrom(data);
             int term = vote.getTerm();
 
             //if RPC request or response contains term T > currentTerm:
@@ -183,7 +182,7 @@ public class Node {
 
             int type = message.getMessageType();
             byte[] data = message.getData();
-            requestVote vote = requestVote.parseFrom(data);
+            RequestVote vote = RequestVote.parseFrom(data);
             int term = vote.getTerm();
 
             //if RPC request or response contains term T > currentTerm:
@@ -252,7 +251,7 @@ public class Node {
             int tempLastLogIndex = log.size();
             int tempLastLogTerm = log.get(log.size()).term;
 
-            requestVote vote = requestVote.newBuilder()
+            RequestVote vote = RequestVote.newBuilder()
                     .setTerm(tempCurrentTerm)
                     .setCandidateId(tempCandidateId)
                     .setLastLogIndex(tempLastLogIndex)
@@ -278,10 +277,9 @@ public class Node {
         }
     }
 
-    //recieve a message
+    //receive a message
     public void newMessage(int type, byte[] data) throws InvalidProtocolBufferException {
         //convert data to proper proto type, add it to queue
-        //1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
 
         MessageWrapper wrapper;
         switch (type){
@@ -306,7 +304,6 @@ public class Node {
                 messages.add(wrapper);
                 break;
         }
-
     }
 
     //processMessage()
