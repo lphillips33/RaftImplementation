@@ -34,7 +34,7 @@ public class Node {
     private ArrayList<String> listOfNodes;
     private long electionStart;
     private String leaderId; //current leader
-    private int timer;
+    private long timer;
 
     ConcurrentLinkedQueue<MessageWrapper> messages; //holds our messages.  This is how we respond.
 
@@ -57,6 +57,7 @@ public class Node {
         this.listOfNodes = network.loadNodes();
         numberOfNodes = this.listOfNodes.size();
         this.leaderId = "0";
+        this.timer = 0;
 
         try {
             this.nodeId = InetAddress.getLocalHost().toString();
@@ -116,7 +117,7 @@ public class Node {
                 }
             }
 
-
+            
             //We haven't received a message in over a second
             if((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
                 for (String destination : listOfNodes) {
@@ -305,16 +306,9 @@ public class Node {
         return result;
     }
 
-    public void startElectionTimer() {
-
-    }
-
-    public void stopElectionTimer() {
-
-    }
 
     public void resetElectionTimer() {
-        this.timer = 0;
+        this.timer = System.nanoTime();
     }
 
 }
