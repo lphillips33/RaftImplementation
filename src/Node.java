@@ -1,6 +1,7 @@
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Timer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -32,7 +33,7 @@ public class Node {
     private ArrayList<String> listOfNodes;
     private long electionStart;
     private String leaderId; //current leader
-    //private Timer
+    private int timer;
 
     ConcurrentLinkedQueue<MessageWrapper> messages; //holds our messages.  This is how we respond.
 
@@ -65,7 +66,6 @@ public class Node {
     }
 
     public void run() throws UnknownHostException, InvalidProtocolBufferException {
-
         while (true) {
             switch (role) {
                 case LEADER:
@@ -82,12 +82,7 @@ public class Node {
     }
 
     public Role leader() throws InvalidProtocolBufferException {
-
-        MessageWrapper message = messages.poll();
-        int messageType = message.getMessageType();
-        byte[] data = message.getData();
-
-        RequestVoteResponse response = RequestVoteResponse.parseFrom(data);
+        long lastTimeReceivedMessageFromClient = 0;
 
         //upon election: send initial empty AppendEntries RPCs (heartbeat) to each server; repeat during idle periods to prevent election timeouts
         AppendEntries appendEntriesHeartbeat = AppendEntries.newBuilder().build();
@@ -95,7 +90,7 @@ public class Node {
         byte[] dataToSend = appendEntriesHeartbeat.toByteArray();
 
         for (String destination : listOfNodes) {
-            network.sendMessage(destination, 2, data.length, dataToSend);
+            network.sendMessage(destination, 2, dataToSend.length, dataToSend);
         }
 
         while (true) {
@@ -105,10 +100,26 @@ public class Node {
                 //apply(log.get(lastAppliedIndex));
             }
 
-            int termT = response.getTerm();
-            if (termT > currentTerm) {
-                currentTerm = termT;
-                return Role.FOLLOWER;
+            if (!(messages.isEmpty())){
+                MessageWrapper message = messages.poll();
+                lastTimeReceivedMessageFromClient = System.nanoTime();
+                int messageType = message.getMessageType();
+                byte[] data = message.getData();
+
+                RequestVoteResponse response = RequestVoteResponse.parseFrom(data);
+
+                int termT = response.getTerm();
+                if (termT > currentTerm) {
+                    currentTerm = termT;
+                    return Role.FOLLOWER;
+                }
+            }
+
+            //don't have any messages
+            if((lastTimeReceivedMessageFromClient - System.nanoTime()) < 1000000000) {
+                for (String destination : listOfNodes) {
+                    network.sendMessage(destination, 2, dataToSend.length, dataToSend);
+                }
             }
         }
     }
@@ -141,7 +152,6 @@ public class Node {
                         byte[] dataToSend = null;
                         if (term < currentTerm) {
                             requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(this.currentTerm).setVoteGranted(false).build();
-                            dataToSend = requestVote.toByteArray();
                         }
 
                         if ((this.votedFor == null || votedFor.equals(destination)) && requestVote.getLastLogIndex() > this.lastAppliedIndex) {
@@ -180,7 +190,6 @@ public class Node {
                         }
 
                         termT = appendEntries.getTerm();
-
                         break;
                     case 3:
                         break;
@@ -276,10 +285,8 @@ public class Node {
             //If election timeout elapses: start new election
             if (System.nanoTime() > electionStart)
                 return Role.CANDIDATE;
-
         }
     }
-
 
     //receive a message from network class
     public void newMessage(int type, byte[] data) throws InvalidProtocolBufferException {
@@ -302,7 +309,7 @@ public class Node {
     }
 
     public void resetElectionTimer() {
-
+        this.timer = 0;
     }
 
 }
