@@ -1,9 +1,19 @@
+//AppendEntriesResponse.proto accidentally named currentTerm instead of just term like the other 3 .proto
+
+//can i return currentTerm to term?
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
+import com.reber.raft.AppendEntriesProtos.AppendEntries;
 import com.reber.raft.RequestVoteProtos.requestVote;
+import com.reber.raft.RequestVoteResponseProtos;
+import com.reber.raft.RequestVoteResponseProtos.requestVoteResponse;
+import com.reber.raft.AppendEntriesResponseProtos.AppendEntriesResponse;
 
 
 public class Node {
@@ -26,9 +36,7 @@ public class Node {
     private long electionTimeout;
     private ArrayList<String> listOfNodes;
 
-    ConcurrentLinkedQueue<>
-    ConcurrentLinkedQueue<byte[]> //this will hold our messages
-
+    ConcurrentLinkedQueue<MessageWrapper> messages; //holds our messages.  This is how we respond.
 
     public enum Role {
         FOLLOWER, LEADER, CANDIDATE
@@ -59,18 +67,24 @@ public class Node {
 
     //All Servers:
 
-    public void run(int t) {
+    public void run(int t) throws InvalidProtocolBufferException {
 
-        //increment votes recieved
+        //increment votes received
 
         while (true) {
 
             //dequeue here, send it correctly
 
+
+            MessageWrapper tempMessage = null;
+            if(!messages.isEmpty()) {
+                tempMessage = messages.poll();
+            }
+
             switch (role) {
 
                 case LEADER:
-                    role = leader();
+                    role = leader(tempMessage);
                 case FOLLOWER:
                     role = follower();
                 case CANDIDATE:
@@ -85,9 +99,18 @@ public class Node {
 
     }
 
-    //How to get message?
+    public Role leader(MessageWrapper message) throws InvalidProtocolBufferException {
 
-    public Role leader() {
+        if(message != null) {
+            // do something
+
+            int type = message.getMessageType();
+            byte[] data = message.getData();
+            requestVote vote = requestVote.parseFrom(data);
+            int term = vote.getTerm();
+
+        }
+
 
         //network.sendMessage();
 
@@ -98,7 +121,7 @@ public class Node {
 
         //if RPC request or response contains term T > currentTerm:
         //set currentTerm = t, convert to follower
-        if(t > currentTerm) {
+        if(term > currentTerm) {
             currentTerm = t;
             changeRole(Role.FOLLOWER); //convert to follower
 
@@ -118,7 +141,7 @@ public class Node {
 
         //if RPC request or response contains term T > currentTerm:
         //set currentTerm = t, convert to follower
-        if(t > currentTerm) {
+        if(term > currentTerm) {
             currentTerm = t;
             changeRole(Role.FOLLOWER); //convert to follower
         }
@@ -149,7 +172,7 @@ public class Node {
 
         //if RPC request or response contains term T > currentTerm:
         //set currentTerm = t, convert to follower
-        if(t > currentTerm) {
+        if(term > currentTerm) {
             currentTerm = t;
             changeRole(Role.FOLLOWER); //convert to follower
         }
@@ -215,7 +238,7 @@ public class Node {
             }
 
             //If votes received from majority servers: become leader
-            if(votesReceivedCount >=  Math.ceil(numberOfNodes / 2)) {
+            if(this.votesReceivedCount >=  Math.ceil(numberOfNodes / 2)) {
                 role = Role.LEADER;
             }
 
@@ -225,22 +248,37 @@ public class Node {
     }
 
     //recieve a message
-    public void newMessage(int type, byte[] data) {
+    public void newMessage(int type, byte[] data) throws InvalidProtocolBufferException {
         //convert data to proper proto type, add it to queue
         //1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
+
+        MessageWrapper wrapper;
         switch (type){
             case 1: //requestVote
+                //requestVote vote = requestVote.parseFrom(data);
+                wrapper = new MessageWrapper(type, data);
+                messages.add(wrapper);
                 break;
             case 2: //AppendEntries
+                //AppendEntries entries = AppendEntries.parseFrom(data);
+                wrapper = new MessageWrapper(type, data);
+                messages.add(wrapper);
                 break;
             case 3: //RequestVoteResponse
+                //requestVoteResponse requestVoteResponse = RequestVoteResponseProtos.requestVoteResponse.parseFrom(data);
+                wrapper = new MessageWrapper(type, data);
+                messages.add(wrapper);
                 break;
             case 4: //AppendEntriesResponse
+                //AppendEntriesResponse appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
+                wrapper = new MessageWrapper(type, data);
+                messages.add(wrapper);
                 break;
-
         }
 
     }
+
+    //processMessage
 
     public long computeElectionTimeout(long min, long max) {
         long diff = max - min;
