@@ -32,6 +32,7 @@ public class Node {
     private long electionTimeout;
     private ArrayList<String> listOfNodes;
     private String leaderId; //current leader
+    private Timer
 
     ConcurrentLinkedQueue<MessageWrapper> messages; //holds our messages.  This is how we respond.
 
@@ -228,17 +229,9 @@ public class Node {
                 }
             }
 
-
-            }
-
-
-
-
-
-
+        }
             //If election timeout elapses: start new election
 
-        }
 
         return role;
     }
@@ -331,6 +324,14 @@ public class Node {
         long diff = max - min;
         long random = (int)((Math.random() * 10000) % diff) + min;
         return random;
+    }
+
+    public void startElectionTimer() {
+
+    }
+
+    public void stopElectionTimer() {
+
     }
 
     public void resetElectionTimer() {
