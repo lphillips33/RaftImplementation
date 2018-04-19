@@ -113,7 +113,7 @@ public class Network {
     // 1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
     public Boolean receiveMessage() throws IOException {
 
-        ServerSocket serverSoc = new ServerSocket(666);
+        ServerSocket serverSoc = new ServerSocket(6666);
 
         Socket connection = serverSoc.accept();
         System.out.println("Accepting client " + connection.getRemoteSocketAddress().toString());
