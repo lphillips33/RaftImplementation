@@ -31,6 +31,7 @@ public class Node {
     private long lastTimeReceivedAppendEntriesFromLeader;
     private long electionTimeout;
     private ArrayList<String> listOfNodes;
+    private String leaderId; //current leader
 
     ConcurrentLinkedQueue<MessageWrapper> messages; //holds our messages.  This is how we respond.
 
@@ -52,6 +53,7 @@ public class Node {
         this.electionTimeout = computeElectionTimeout(1, 5);
         this.listOfNodes = network.loadNodes();
         numberOfNodes = this.listOfNodes.size();
+        this.leaderId = "0";
 
         try{
             this.nodeId = InetAddress.getLocalHost().toString();
@@ -200,19 +202,39 @@ public class Node {
 
         if(message != null) {
 
+
             int type = message.getMessageType();
             byte[] data = message.getData();
-            RequestVote vote = RequestVote.parseFrom(data);
-            int term = vote.getTerm();
 
-            //if RPC request or response contains term T > currentTerm:
-            //set currentTerm = t, convert to follower
-            if (term > currentTerm) {
-                currentTerm = term;
-                changeRole(Role.FOLLOWER); //convert to follower
+            if(type == 1) { //RequestVote
+                RequestVote vote = RequestVote.parseFrom(data);
+                int term = vote.getTerm();
+
+                //if RPC request or response contains term T > currentTerm:
+                //set currentTerm = t, convert to follower
+                if (term > currentTerm) {
+                    currentTerm = term;
+                    changeRole(Role.FOLLOWER); //convert to follower
+                }
+            } else if(type == 2) { //AppendEntries
+                //If AppendEntries RPC received from new leader: convert to follower
+
+                    AppendEntries tempAppendEntries = AppendEntries.parseFrom(data);
+                    String id = tempAppendEntries.getLeaderId();
+
+                // If AppendEntries RPC received from new leader
+                if(id.equals(leaderId)){
+                    changeRole(Role.FOLLOWER);
+                }
             }
 
-            //If AppendEntries RPC received from new leader: convert to follower
+
+            }
+
+
+
+
+
 
             //If election timeout elapses: start new election
 
