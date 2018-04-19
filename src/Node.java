@@ -32,7 +32,7 @@ public class Node {
     private long electionTimeout;
     private ArrayList<String> listOfNodes;
     private String leaderId; //current leader
-    private Timer
+    //private Timer
 
     ConcurrentLinkedQueue<MessageWrapper> messages; //holds our messages.  This is how we respond.
 
@@ -76,34 +76,11 @@ public class Node {
 
             MessageWrapper tempMessage = null;
 
-            if(!messages.isEmpty()) {
+            if(!messages.isEmpty())
                 tempMessage = messages.poll();
-
-                int type = tempMessage.getMessageType();
-                byte[] data = tempMessage.getData();
-
-                switch (type){
-                    case 1: //requestVote
-                        RequestVote vote = RequestVote.parseFrom(data);
-                        break;
-                    case 2: //AppendEntries
-                        AppendEntries entries = AppendEntries.parseFrom(data);
-                        break;
-                    case 3: //RequestVoteResponse
-                        RequestVoteResponse requestVoteResponse = RequestVoteResponseProtos.RequestVoteResponse.parseFrom(data);
-                        break;
-                    case 4: //AppendEntriesResponse
-                        AppendEntriesResponse appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
-                        break;
-                }
-
-
-            }
-
 
             //is role = correct here? role is already saved in the instance data
             switch (role) {
-
                 case LEADER:
                     role = leader(tempMessage);
                     break;
@@ -128,28 +105,45 @@ public class Node {
             //apply(log.get(lastAppliedIndex));
         }
 
-        //might have to add if statements for different types of messages
-
         if(message != null) {
-            // do something
 
             int type = message.getMessageType();
             byte[] data = message.getData();
-            RequestVote vote = RequestVote.parseFrom(data);
-            int term = vote.getTerm();
 
+            int termT = 0;
 
-            //network.sendMessage();
-
-            //if RPC request or response contains term T > currentTerm:
-            //set currentTerm = t, convert to follower
-            if (term > currentTerm) {
-                currentTerm = term;
-                changeRole(Role.FOLLOWER); //convert to follower
-
+            if(type ==  1) {
+                RequestVote voteRequest = RequestVote.parseFrom(data);
+                termT = voteRequest.getTerm();
+            } else if(type == 2){
+                AppendEntries appendRequest = AppendEntries.parseFrom(data);
+                termT = appendRequest.getTerm();
+            } else if(type == 3){ //RequestVoteResponse
+                RequestVote voteRequestResponse = RequestVote.parseFrom(data);
+                termT = voteRequestResponse.getTerm();
+            } else if(type == 4){ //AppendEntriesResponse
+                AppendEntriesResponse appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
+                termT = appendEntriesResponse.getTerm();
             }
 
-                // IF COMMAND RECEIVED FROM CLIENT: APPEND ENTRY TO LOCAL LOG, RESPOND AFTER ENTRY APPLIED TO STATE MACHINE (COMMAND COMES FROM QUEUE)
+            //if RPC request or response contains term T > currentTerm: set currentTerm = t, convert to follower
+            if(termT > currentTerm) {
+                currentTerm = termT;
+                changeRole(Role.FOLLOWER); //convert to follower
+            }
+
+            // IF COMMAND RECEIVED FROM CLIENT: APPEND ENTRY TO LOCAL LOG, RESPOND AFTER ENTRY APPLIED TO STATE MACHINE (COMMAND COMES FROM QUEUE)
+
+            //SEND HEARTBEATS DURING IDLE PERIODS TO PREVENT ELECTION TIMEOUTS
+            AppendEntries appendEntriesHeartbeat = AppendEntries.newBuilder().build();
+
+            byte[] heartBeatData = appendEntriesHeartbeat.toByteArray();
+
+            for(String destination : listOfNodes) {
+                network.sendMessage(destination, 2, data.length, heartBeatData);
+            }
+
+
         }
         return role;
 
@@ -162,80 +156,133 @@ public class Node {
             //apply(log.get(lastAppliedIndex));
         }
 
-        if(message != null ) {
+        if(message != null) {
             // do something
 
             int type = message.getMessageType();
             byte[] data = message.getData();
-            RequestVote vote = RequestVote.parseFrom(data);
-            int term = vote.getTerm();
 
-            //if RPC request or response contains term T > currentTerm:
-            //set currentTerm = t, convert to follower
-            if (term > currentTerm) {
-                currentTerm = term;
-                changeRole(Role.FOLLOWER); //convert to follower
+            int termT = 0;
+
+            if(type ==  1) {
+                RequestVote voteRequest = RequestVote.parseFrom(data);
+                termT = voteRequest.getTerm();
+
+                //create requestVoteResponse
+                RequestVoteResponse requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(currentTerm).setVoteGranted(true).build();
+
+                String destination =  voteRequest.getCandidateId();
+                network.sendMessage(destination, 1, data.length, data);
+                votesReceivedCount++; //I think this is wrong
+
+            } else if(type == 2){
+                AppendEntries appendRequest = AppendEntries.parseFrom(data);
+                termT = appendRequest.getTerm();
+
+                //create appendEntriesResponse
+
+                boolean success = false;
+
+                int prevLogIndex = appendRequest.getPrevLogIndex();
+                int prevLogTerm = appendRequest.getPrevLogterm();
+
+
+                //set success = true if follower contained entry matching prevLogIndex and prevLogTerm
+
+               for(LogEntry entry : log) {
+                   int term = entry.getTerm();
+                   ArrayList<String> entries = entry.getCommands();
+               }
+
+                AppendEntriesResponse appendEntriesResponse =  AppendEntriesResponse.newBuilder().setTerm(currentTerm).setSuccess(success).build();
+
+                String destination =  appendRequest.getLeaderId();
+                network.sendMessage(destination, 1, data.length, data);
+
+            } else if(type == 3){ //RequestVoteResponse
+                RequestVote voteRequestResponse = RequestVote.parseFrom(data);
+                termT = voteRequestResponse.getTerm();
+            } else if(type == 4){ //AppendEntriesResponse
+                AppendEntriesResponse appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
+                termT = appendEntriesResponse.getTerm();
             }
 
+            //if RPC request or response contains term T > currentTerm: set currentTerm = t, convert to follower
+            if(termT > currentTerm) {
+                currentTerm = termT;
+                changeRole(Role.FOLLOWER); //convert to follower
+            }
         }
 
-        // RESPOND TO RPCs FROM CANDIDATES AND LEADERS
+        // RESPOND TO RPCs FROM CANDIDATES AND LEADERS ???
 
-        //take a message off of the queue and deal with it
 
        // If election timeout elapses without receiving AppendEntries RPC from current leader or granting vote to candidate: convert to candidate
         if(System.nanoTime() - lastTimeReceivedAppendEntriesFromLeader > electionTimeout) {
             changeRole(Role.CANDIDATE);
         }
 
-        //election timeout?
-
         return role;
 
     }
 
-    public Role candidate(MessageWrapper message) throws InvalidProtocolBufferException{
+    public Role candidate(MessageWrapper message) throws InvalidProtocolBufferException {
 
-        if(commitIndex > lastAppliedIndex) {
+        if (commitIndex > lastAppliedIndex) {
             lastAppliedIndex++;
             //apply(log.get(lastAppliedIndex));
         }
 
         if(message != null) {
-
+            // do something
 
             int type = message.getMessageType();
             byte[] data = message.getData();
 
-            if(type == 1) { //RequestVote
-                RequestVote vote = RequestVote.parseFrom(data);
-                int term = vote.getTerm();
+            int termT = 0;
 
-                //if RPC request or response contains term T > currentTerm:
-                //set currentTerm = t, convert to follower
-                if (term > currentTerm) {
-                    currentTerm = term;
-                    changeRole(Role.FOLLOWER); //convert to follower
-                }
-            } else if(type == 2) { //AppendEntries
+            if(type ==  1) {
+                RequestVote voteRequest = RequestVote.parseFrom(data);
+                termT = voteRequest.getTerm();
+            } else if(type == 2){
+                AppendEntries appendRequest = AppendEntries.parseFrom(data);
+                termT = appendRequest.getTerm();
+
+
+                AppendEntries tempAppendEntries = AppendEntries.parseFrom(data);
+                String id = tempAppendEntries.getLeaderId();
+
                 //If AppendEntries RPC received from new leader: convert to follower
-
-                    AppendEntries tempAppendEntries = AppendEntries.parseFrom(data);
-                    String id = tempAppendEntries.getLeaderId();
-
-                // If AppendEntries RPC received from new leader
-                if(id.equals(leaderId)){
+                if (id.equals(leaderId)) {
                     changeRole(Role.FOLLOWER);
                 }
+
+            } else if(type == 3){ //RequestVoteResponse
+                RequestVote voteRequestResponse = RequestVote.parseFrom(data);
+                termT = voteRequestResponse.getTerm();
+            } else if(type == 4){ //AppendEntriesResponse
+                AppendEntriesResponse appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
+                termT = appendEntriesResponse.getTerm();
+            }
+
+            //if RPC request or response contains term T > currentTerm:
+            //set currentTerm = t, convert to follower
+            if(termT > currentTerm) {
+                currentTerm = termT;
+                changeRole(Role.FOLLOWER); //convert to follower
             }
 
         }
-            //If election timeout elapses: start new election
 
+        //If votes received from majority servers: become leader
+        if(this.votesReceivedCount >=  Math.ceil(numberOfNodes / 2)) {
+            changeRole(Role.LEADER);
+        }
+
+        //If election timeout elapses: start new election
 
         return role;
     }
-
 
     public void changeRole(Role new_role) {
         if(role == new_role)
@@ -246,9 +293,9 @@ public class Node {
             //upon election: send initial empty AppendEntries RPCs (heartbeat) to each server; repeat during idle periods
             //to prevent election timeouts
 
-            AppendEntries appendEntries = AppendEntries.newBuilder().build();
+            AppendEntries appendEntriesHeartbeat = AppendEntries.newBuilder().build();
 
-            byte[] data = appendEntries.toByteArray();
+            byte[] data = appendEntriesHeartbeat.toByteArray();
 
             for(String destination : listOfNodes) {
                 network.sendMessage(destination, 2, data.length, data);
@@ -273,7 +320,6 @@ public class Node {
             resetElectionTimer();
 
             //send RequestVote RPCs to all other servers
-
             int tempCurrentTerm = this.currentTerm;
             String tempCandidateId = "";
 
@@ -284,7 +330,7 @@ public class Node {
             }
 
             int tempLastLogIndex = log.size();
-            int tempLastLogTerm = log.get(log.size()).term;
+            int tempLastLogTerm = log.get(log.size()).getTerm();
 
             RequestVote vote = RequestVote.newBuilder()
                     .setTerm(tempCurrentTerm)
@@ -293,7 +339,6 @@ public class Node {
                     .setLastLogTerm(tempLastLogTerm)
                     .build();
 
-
             byte[] data = vote.toByteArray();
 
             //send RequestVote to all other servers
@@ -301,19 +346,13 @@ public class Node {
                 network.sendMessage(destination, 1, data.length, data);
             }
 
-            //If votes received from majority servers: become leader
-            if(this.votesReceivedCount >=  Math.ceil(numberOfNodes / 2)) {
-                changeRole(Role.LEADER);
-            }
 
-            //If AppendEntries RPC received from new leader: convert to follower
 
         }
     }
 
     //receive a message from network class
     public void newMessage(int type, byte[] data) throws InvalidProtocolBufferException {
-
         MessageWrapper wrapper = new MessageWrapper(type, data);
         messages.add(wrapper);
     }
