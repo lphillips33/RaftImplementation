@@ -2,6 +2,7 @@
 
 //can i return currentTerm to term?
 
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import com.reber.raft.RequestVoteResponseProtos;
 import com.reber.raft.RequestVoteResponseProtos.requestVoteResponse;
 import com.reber.raft.AppendEntriesResponseProtos.AppendEntriesResponse;
 
-
+@SuppressWarnings("Duplicates")
 public class Node {
 
     private Role role;
@@ -101,6 +102,13 @@ public class Node {
 
     public Role leader(MessageWrapper message) throws InvalidProtocolBufferException {
 
+        if (commitIndex > lastAppliedIndex) {
+            lastAppliedIndex++;
+            //apply(log.get(lastAppliedIndex));
+        }
+
+        //might have to add if statements for different types of messages
+
         if(message != null) {
             // do something
 
@@ -109,41 +117,46 @@ public class Node {
             requestVote vote = requestVote.parseFrom(data);
             int term = vote.getTerm();
 
-        }
+
+            //network.sendMessage();
+
+            //if RPC request or response contains term T > currentTerm:
+            //set currentTerm = t, convert to follower
+            if (term > currentTerm) {
+                currentTerm = term;
+                changeRole(Role.FOLLOWER); //convert to follower
+
+                }
 
 
-        //network.sendMessage();
-
-        if(commitIndex > lastAppliedIndex) {
-            lastAppliedIndex++;
-            //apply(log.get(lastAppliedIndex));
-        }
-
-        //if RPC request or response contains term T > currentTerm:
-        //set currentTerm = t, convert to follower
-        if(term > currentTerm) {
-            currentTerm = t;
-            changeRole(Role.FOLLOWER); //convert to follower
-
-        }
-
+                // IF COMMAND RECEIVED FROM CLIENT: APPEND ENTRY TO LOCAL LOG, RESPOND AFTER ENTRY APPLIED TO STATE MACHINE (COMMAND COMES FROM QUEUE)
+             }
         return role;
 
     }
 
-    public Role follower() {
-
+    public Role follower(MessageWrapper message) throws InvalidProtocolBufferException {
 
         if(commitIndex > lastAppliedIndex) {
             lastAppliedIndex++;
             //apply(log.get(lastAppliedIndex));
         }
 
-        //if RPC request or response contains term T > currentTerm:
-        //set currentTerm = t, convert to follower
-        if(term > currentTerm) {
-            currentTerm = t;
-            changeRole(Role.FOLLOWER); //convert to follower
+        if(message != null ) {
+            // do something
+
+            int type = message.getMessageType();
+            byte[] data = message.getData();
+            requestVote vote = requestVote.parseFrom(data);
+            int term = vote.getTerm();
+
+            //if RPC request or response contains term T > currentTerm:
+            //set currentTerm = t, convert to follower
+            if (term > currentTerm) {
+                currentTerm = term;
+                changeRole(Role.FOLLOWER); //convert to follower
+            }
+
         }
 
         // RESPOND TO RPCs FROM CANDIDATES AND LEADERS
@@ -161,25 +174,32 @@ public class Node {
 
     }
 
-    public Role candidate() {
+    public Role candidate(MessageWrapper message) throws InvalidProtocolBufferException{
 
         if(commitIndex > lastAppliedIndex) {
             lastAppliedIndex++;
             //apply(log.get(lastAppliedIndex));
         }
 
-        //HOW TO ACCESS RPC REQUEST?
+        if(message != null) {
 
-        //if RPC request or response contains term T > currentTerm:
-        //set currentTerm = t, convert to follower
-        if(term > currentTerm) {
-            currentTerm = t;
-            changeRole(Role.FOLLOWER); //convert to follower
+            int type = message.getMessageType();
+            byte[] data = message.getData();
+            requestVote vote = requestVote.parseFrom(data);
+            int term = vote.getTerm();
+
+            //if RPC request or response contains term T > currentTerm:
+            //set currentTerm = t, convert to follower
+            if (term > currentTerm) {
+                currentTerm = term;
+                changeRole(Role.FOLLOWER); //convert to follower
+            }
+
+            //If AppendEntries RPC received from new leader: convert to follower
+
+            //If election timeout elapses: start new election
+
         }
-
-        //If AppendEntries RPC received from new leader: convert to follower
-
-        //If election timeout elapses: start new election
 
         return role;
     }
@@ -190,6 +210,20 @@ public class Node {
             return;
 
         if(new_role == Role.LEADER) {
+
+            //upon election: send initial empty AppendEntries RPCs (heartbeat) to each server; repeat during idle periods
+            //to prevent election timeouts
+
+            AppendEntries appendEntries = AppendEntries.newBuilder().build();
+
+            byte[] data = appendEntries.toByteArray();
+
+            for(String destination : listOfNodes) {
+                network.sendMessage(destination, 2, data.length, data);
+            }
+
+            //REPEAT DURING IDLE PERIODS TO PREVENT ELECTION TIMEOUTS
+
 
         } else if(new_role == Role.FOLLOWER) {
             this.role = Role.FOLLOWER;
