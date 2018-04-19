@@ -1,7 +1,6 @@
 //AppendEntriesResponse.proto accidentally named currentTerm instead of just term like the other 3 .proto
 
-//can i return currentTerm to term?
-
+//can i refactor currentTerm to term?
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -78,21 +77,21 @@ public class Node {
 
 
             MessageWrapper tempMessage = null;
+
             if(!messages.isEmpty()) {
                 tempMessage = messages.poll();
             }
 
+            //is role = correct here? role is already saved in the instance data
             switch (role) {
 
                 case LEADER:
                     role = leader(tempMessage);
                 case FOLLOWER:
-                    role = follower();
+                    role = follower(tempMessage);
                 case CANDIDATE:
-                    role = candidate();
+                    role = candidate(tempMessage);
             }
-
-
 
             //if currentTime - lastRecievedTime > timeOut
         }
@@ -126,11 +125,10 @@ public class Node {
                 currentTerm = term;
                 changeRole(Role.FOLLOWER); //convert to follower
 
-                }
-
+            }
 
                 // IF COMMAND RECEIVED FROM CLIENT: APPEND ENTRY TO LOCAL LOG, RESPOND AFTER ENTRY APPLIED TO STATE MACHINE (COMMAND COMES FROM QUEUE)
-             }
+        }
         return role;
 
     }
@@ -224,13 +222,11 @@ public class Node {
 
             //REPEAT DURING IDLE PERIODS TO PREVENT ELECTION TIMEOUTS
 
-
         } else if(new_role == Role.FOLLOWER) {
             this.role = Role.FOLLOWER;
 
         } else if(new_role == Role.CANDIDATE) {
             this.role = Role.CANDIDATE;
-
             this.currentTerm++;
 
             try {
@@ -246,6 +242,7 @@ public class Node {
 
             int tempCurrentTerm = this.currentTerm;
             String tempCandidateId = "";
+
             try {
                 tempCandidateId = InetAddress.getLocalHost().toString(); //who is requesting a vote
             }catch (UnknownHostException e){
@@ -312,7 +309,7 @@ public class Node {
 
     }
 
-    //processMessage
+    //processMessage()
 
     public long computeElectionTimeout(long min, long max) {
         long diff = max - min;
