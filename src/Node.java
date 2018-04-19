@@ -1,7 +1,3 @@
-//AppendEntriesResponse.proto accidentally named currentTerm instead of just term like the other 3 .proto
-
-//can i refactor currentTerm to term?
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -67,7 +63,7 @@ public class Node {
 
     //All Servers:
 
-    public void run(int t) throws InvalidProtocolBufferException {
+    public void run() throws InvalidProtocolBufferException {
 
         //increment votes received
 
@@ -79,17 +75,41 @@ public class Node {
 
             if(!messages.isEmpty()) {
                 tempMessage = messages.poll();
+
+                int type = tempMessage.getMessageType();
+                byte[] data = tempMessage.getData();
+
+                switch (type){
+                    case 1: //requestVote
+                        RequestVote vote = RequestVote.parseFrom(data);
+                        break;
+                    case 2: //AppendEntries
+                        AppendEntries entries = AppendEntries.parseFrom(data);
+                        break;
+                    case 3: //RequestVoteResponse
+                        RequestVoteResponse requestVoteResponse = RequestVoteResponseProtos.RequestVoteResponse.parseFrom(data);
+                        break;
+                    case 4: //AppendEntriesResponse
+                        AppendEntriesResponse appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
+                        break;
+                }
+
+
             }
+
 
             //is role = correct here? role is already saved in the instance data
             switch (role) {
 
                 case LEADER:
                     role = leader(tempMessage);
+                    break;
                 case FOLLOWER:
                     role = follower(tempMessage);
+                    break;
                 case CANDIDATE:
                     role = candidate(tempMessage);
+                    break;
             }
 
             //if currentTime - lastRecievedTime > timeOut
@@ -262,14 +282,13 @@ public class Node {
             byte[] data = vote.toByteArray();
 
             //send RequestVote to all other servers
-            //1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
             for(String destination : listOfNodes) {
                 network.sendMessage(destination, 1, data.length, data);
             }
 
             //If votes received from majority servers: become leader
             if(this.votesReceivedCount >=  Math.ceil(numberOfNodes / 2)) {
-                role = Role.LEADER;
+                changeRole(Role.LEADER);
             }
 
             //If AppendEntries RPC received from new leader: convert to follower
@@ -277,33 +296,11 @@ public class Node {
         }
     }
 
-    //receive a message
+    //receive a message from network class
     public void newMessage(int type, byte[] data) throws InvalidProtocolBufferException {
-        //convert data to proper proto type, add it to queue
 
-        MessageWrapper wrapper;
-        switch (type){
-            case 1: //requestVote
-                //requestVote vote = requestVote.parseFrom(data);
-                wrapper = new MessageWrapper(type, data);
-                messages.add(wrapper);
-                break;
-            case 2: //AppendEntries
-                //AppendEntries entries = AppendEntries.parseFrom(data);
-                wrapper = new MessageWrapper(type, data);
-                messages.add(wrapper);
-                break;
-            case 3: //RequestVoteResponse
-                //requestVoteResponse requestVoteResponse = RequestVoteResponseProtos.requestVoteResponse.parseFrom(data);
-                wrapper = new MessageWrapper(type, data);
-                messages.add(wrapper);
-                break;
-            case 4: //AppendEntriesResponse
-                //AppendEntriesResponse appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
-                wrapper = new MessageWrapper(type, data);
-                messages.add(wrapper);
-                break;
-        }
+        MessageWrapper wrapper = new MessageWrapper(type, data);
+        messages.add(wrapper);
     }
 
     //processMessage()
