@@ -28,13 +28,18 @@ public final class AppendEntriesProtos {
     int getTerm();
 
     /**
-     * <code>optional int32 leaderId = 2;</code>
+     * <code>optional string leaderId = 2;</code>
      */
     boolean hasLeaderId();
     /**
-     * <code>optional int32 leaderId = 2;</code>
+     * <code>optional string leaderId = 2;</code>
      */
-    int getLeaderId();
+    java.lang.String getLeaderId();
+    /**
+     * <code>optional string leaderId = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getLeaderIdBytes();
 
     /**
      * <code>optional int32 prevLogIndex = 3;</code>
@@ -101,7 +106,7 @@ public final class AppendEntriesProtos {
     }
     private AppendEntries() {
       term_ = 0;
-      leaderId_ = 0;
+      leaderId_ = "";
       prevLogIndex_ = 0;
       prevLogterm_ = 0;
       leaderCommit_ = 0;
@@ -144,9 +149,10 @@ public final class AppendEntriesProtos {
               term_ = input.readInt32();
               break;
             }
-            case 16: {
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
-              leaderId_ = input.readInt32();
+              leaderId_ = bs;
               break;
             }
             case 24: {
@@ -862,18 +868,45 @@ public final class AppendEntriesProtos {
     }
 
     public static final int LEADERID_FIELD_NUMBER = 2;
-    private int leaderId_;
+    private volatile java.lang.Object leaderId_;
     /**
-     * <code>optional int32 leaderId = 2;</code>
+     * <code>optional string leaderId = 2;</code>
      */
     public boolean hasLeaderId() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>optional int32 leaderId = 2;</code>
+     * <code>optional string leaderId = 2;</code>
      */
-    public int getLeaderId() {
-      return leaderId_;
+    public java.lang.String getLeaderId() {
+      java.lang.Object ref = leaderId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          leaderId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string leaderId = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getLeaderIdBytes() {
+      java.lang.Object ref = leaderId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        leaderId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
     public static final int PREVLOGINDEX_FIELD_NUMBER = 3;
@@ -972,7 +1005,7 @@ public final class AppendEntriesProtos {
         output.writeInt32(1, term_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeInt32(2, leaderId_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, leaderId_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeInt32(3, prevLogIndex_);
@@ -999,8 +1032,7 @@ public final class AppendEntriesProtos {
           .computeInt32Size(1, term_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, leaderId_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, leaderId_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
@@ -1041,8 +1073,8 @@ public final class AppendEntriesProtos {
       }
       result = result && (hasLeaderId() == other.hasLeaderId());
       if (hasLeaderId()) {
-        result = result && (getLeaderId()
-            == other.getLeaderId());
+        result = result && getLeaderId()
+            .equals(other.getLeaderId());
       }
       result = result && (hasPrevLogIndex() == other.hasPrevLogIndex());
       if (hasPrevLogIndex()) {
@@ -1078,7 +1110,7 @@ public final class AppendEntriesProtos {
       }
       if (hasLeaderId()) {
         hash = (37 * hash) + LEADERID_FIELD_NUMBER;
-        hash = (53 * hash) + getLeaderId();
+        hash = (53 * hash) + getLeaderId().hashCode();
       }
       if (hasPrevLogIndex()) {
         hash = (37 * hash) + PREVLOGINDEX_FIELD_NUMBER;
@@ -1228,7 +1260,7 @@ public final class AppendEntriesProtos {
         super.clear();
         term_ = 0;
         bitField0_ = (bitField0_ & ~0x00000001);
-        leaderId_ = 0;
+        leaderId_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
         prevLogIndex_ = 0;
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1341,7 +1373,9 @@ public final class AppendEntriesProtos {
           setTerm(other.getTerm());
         }
         if (other.hasLeaderId()) {
-          setLeaderId(other.getLeaderId());
+          bitField0_ |= 0x00000002;
+          leaderId_ = other.leaderId_;
+          onChanged();
         }
         if (other.hasPrevLogIndex()) {
           setPrevLogIndex(other.getPrevLogIndex());
@@ -1438,34 +1472,78 @@ public final class AppendEntriesProtos {
         return this;
       }
 
-      private int leaderId_ ;
+      private java.lang.Object leaderId_ = "";
       /**
-       * <code>optional int32 leaderId = 2;</code>
+       * <code>optional string leaderId = 2;</code>
        */
       public boolean hasLeaderId() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional int32 leaderId = 2;</code>
+       * <code>optional string leaderId = 2;</code>
        */
-      public int getLeaderId() {
-        return leaderId_;
+      public java.lang.String getLeaderId() {
+        java.lang.Object ref = leaderId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            leaderId_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
       }
       /**
-       * <code>optional int32 leaderId = 2;</code>
+       * <code>optional string leaderId = 2;</code>
        */
-      public Builder setLeaderId(int value) {
-        bitField0_ |= 0x00000002;
+      public com.google.protobuf.ByteString
+          getLeaderIdBytes() {
+        java.lang.Object ref = leaderId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          leaderId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string leaderId = 2;</code>
+       */
+      public Builder setLeaderId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
         leaderId_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 leaderId = 2;</code>
+       * <code>optional string leaderId = 2;</code>
        */
       public Builder clearLeaderId() {
         bitField0_ = (bitField0_ & ~0x00000002);
-        leaderId_ = 0;
+        leaderId_ = getDefaultInstance().getLeaderId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string leaderId = 2;</code>
+       */
+      public Builder setLeaderIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        leaderId_ = value;
         onChanged();
         return this;
       }
@@ -1874,7 +1952,7 @@ public final class AppendEntriesProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\023AppendEntries.proto\022\004raft\"\312\001\n\rAppendEn" +
-      "tries\022\014\n\004term\030\001 \001(\005\022\020\n\010leaderId\030\002 \001(\005\022\024\n" +
+      "tries\022\014\n\004term\030\001 \001(\005\022\020\n\010leaderId\030\002 \001(\t\022\024\n" +
       "\014prevLogIndex\030\003 \001(\005\022\023\n\013prevLogterm\030\004 \001(\005" +
       "\022\024\n\014leaderCommit\030\005 \001(\005\022*\n\007entries\030\006 \003(\0132" +
       "\031.raft.AppendEntries.Entry\032,\n\005Entry\022\022\n\nt" +
