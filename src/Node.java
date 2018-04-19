@@ -1,16 +1,16 @@
-
-//this is a test!!!!!!!
-
-import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.reber.raft.RequestVoteProtos.requestVote;
+
+
 public class Node {
 
     private Role role;
     private String nodeId;
+    //start of state data
     private int currentTerm;
     private String votedFor;
     private ArrayList<LogEntry> log;
@@ -18,15 +18,17 @@ public class Node {
     private int lastAppliedIndex;
     private int[] nextIndex;
     private int[] matchIndex;
+    //end of state data
     Network network;
     private int votesReceivedCount; // need this for candidates method
     private static int numberOfNodes; //need this for candidates method;
-    private long lastTimeReceievedMessageFromLeader;
+    private long lastTimeReceivedAppendEntriesFromLeader;
     private long electionTimeout;
     private ArrayList<String> listOfNodes;
 
     ConcurrentLinkedQueue<>
-    //When servers start up, they begin as followers
+    ConcurrentLinkedQueue<byte[]> //this will hold our messages
+
 
     public enum Role {
         FOLLOWER, LEADER, CANDIDATE
@@ -34,7 +36,7 @@ public class Node {
 
     public Node() {
         network = new Network();
-        this.role = Role.FOLLOWER;
+        this.role = Role.FOLLOWER; //when servers start up, they begin as followers
         this.currentTerm = 0;
         this.votedFor = "0";
         this.log = new ArrayList<LogEntry>();
@@ -42,17 +44,16 @@ public class Node {
         this.lastAppliedIndex = 0;
         this.nextIndex = null;
         this.matchIndex = null;
-        numberOfNodes = 0;
-        this.lastTimeReceievedMessageFromLeader = 0;
+        this.lastTimeReceivedAppendEntriesFromLeader = 0;
         this.electionTimeout = computeElectionTimeout(1, 5);
         this.listOfNodes = network.loadNodes();
+        numberOfNodes = this.listOfNodes.size();
 
         try{
             this.nodeId = InetAddress.getLocalHost().toString();
         } catch(UnknownHostException e){
             e.printStackTrace();
         }
-
 
     }
 
@@ -64,6 +65,8 @@ public class Node {
 
         while (true) {
 
+            //dequeue here, send it correctly
+
             switch (role) {
 
                 case LEADER:
@@ -74,23 +77,13 @@ public class Node {
                     role = candidate();
             }
 
+
+
             //if currentTime - lastRecievedTime > timeOut
         }
 
 
     }
-
-    /*Upon election: send initial empty AppendEntries RPCs (heartbeat) to each server; repeat
-    during idle periods to prevent election timeouts
-
-    If command receieved from client: append entry to local log, respond after entry applied to
-    state machine
-
-    If last log index >= nextIndex for a follower: send
-    AppendEntries RPC with log entries starting at nextIndex
-        If successful: update nextIndex and matchIndex for follower
-
-    */
 
     //How to get message?
 
@@ -100,14 +93,15 @@ public class Node {
 
         if(commitIndex > lastAppliedIndex) {
             lastAppliedIndex++;
-            apply(log[lastAppliedIndex]);
+            //apply(log.get(lastAppliedIndex));
         }
 
         //if RPC request or response contains term T > currentTerm:
         //set currentTerm = t, convert to follower
         if(t > currentTerm) {
             currentTerm = t;
-            role = Role.FOLLOWER; //convert to follower
+            changeRole(Role.FOLLOWER); //convert to follower
+
         }
 
         return role;
@@ -119,25 +113,24 @@ public class Node {
 
         if(commitIndex > lastAppliedIndex) {
             lastAppliedIndex++;
-            apply(log.get(lastAppliedIndex));
+            //apply(log.get(lastAppliedIndex));
         }
 
         //if RPC request or response contains term T > currentTerm:
         //set currentTerm = t, convert to follower
         if(t > currentTerm) {
             currentTerm = t;
-            role = Role.FOLLOWER; //convert to follower
+            changeRole(Role.FOLLOWER); //convert to follower
         }
 
-        // Response to RPCs from candidates and leaders
+        // RESPOND TO RPCs FROM CANDIDATES AND LEADERS
+
+        //take a message off of the queue and deal with it
 
        // If election timeout elapses without receiving AppendEntries RPC from current leader or granting vote to candidate: convert to candidate
-
-        if(System.nanoTime() - lastTimeReceievedMessageFromLeader > electionTimeout) {
+        if(System.nanoTime() - lastTimeReceivedAppendEntriesFromLeader > electionTimeout) {
             changeRole(Role.CANDIDATE);
         }
-
-
 
         //election timeout?
 
@@ -145,24 +138,11 @@ public class Node {
 
     }
 
-
-    /*
-        On conversion to candidate, start election:
-            Increment currentTerm
-            Vote for self
-            Reset election timer
-            Send RequestVote RPCs to all other servers
-            If Votes receieved from majority of servers: become leader
-            If AppendEntries RPC recieved from new leader: convert to follower
-            If election timeout elapses: start new election
-
-     */
-
     public Role candidate() {
 
         if(commitIndex > lastAppliedIndex) {
             lastAppliedIndex++;
-            apply(log.get(lastAppliedIndex));
+            //apply(log.get(lastAppliedIndex));
         }
 
         //HOW TO ACCESS RPC REQUEST?
@@ -171,7 +151,7 @@ public class Node {
         //set currentTerm = t, convert to follower
         if(t > currentTerm) {
             currentTerm = t;
-            role = Role.FOLLOWER; //convert to follower
+            changeRole(Role.FOLLOWER); //convert to follower
         }
 
         //If AppendEntries RPC received from new leader: convert to follower
@@ -189,6 +169,7 @@ public class Node {
         if(new_role == Role.LEADER) {
 
         } else if(new_role == Role.FOLLOWER) {
+            this.role = Role.FOLLOWER;
 
         } else if(new_role == Role.CANDIDATE) {
             this.role = Role.CANDIDATE;
@@ -217,26 +198,49 @@ public class Node {
             int tempLastLogIndex = log.size();
             int tempLastLogTerm = log.get(log.size()).term;
 
-            //send to all other servers
+            requestVote vote = requestVote.newBuilder()
+                    .setTerm(tempCurrentTerm)
+                    .setCandidateId(tempCandidateId)
+                    .setLastLogIndex(tempLastLogIndex)
+                    .setLastLogTerm(tempLastLogTerm)
+                    .build();
 
+
+            byte[] data = vote.toByteArray();
+
+            //send RequestVote to all other servers
+            //1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
             for(String destination : listOfNodes) {
-                Network.sendRequestVote(destination, tempCurrentTerm, tempCandidateId, tempLastLogIndex, tempLastLogTerm);
-
+                network.sendMessage(destination, 1, data.length, data);
             }
 
-            
             //If votes received from majority servers: become leader
             if(votesReceivedCount >=  Math.ceil(numberOfNodes / 2)) {
                 role = Role.LEADER;
             }
 
-            //If AppendEntries RPC receieved from new leader: convert to follower
-
-
+            //If AppendEntries RPC received from new leader: convert to follower
 
         }
     }
 
+    //recieve a message
+    public void newMessage(int type, byte[] data) {
+        //convert data to proper proto type, add it to queue
+        //1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
+        switch (type){
+            case 1: //requestVote
+                break;
+            case 2: //AppendEntries
+                break;
+            case 3: //RequestVoteResponse
+                break;
+            case 4: //AppendEntriesResponse
+                break;
+
+        }
+
+    }
 
     public long computeElectionTimeout(long min, long max) {
         long diff = max - min;
@@ -246,10 +250,6 @@ public class Node {
 
     public void resetElectionTimer() {
 
-    }
-
-    public String getVotedFor() {
-        return votedFor;
     }
 
 }
