@@ -1,6 +1,7 @@
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -115,8 +116,9 @@ public class Node {
                 }
             }
 
-            //don't have any messages
-            if((lastTimeReceivedMessageFromClient - System.nanoTime()) < 1000000000) {
+
+            //We haven't received a message in over a second
+            if((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
                 for (String destination : listOfNodes) {
                     network.sendMessage(destination, 2, dataToSend.length, dataToSend);
                 }
@@ -283,7 +285,7 @@ public class Node {
             }
 
             //If election timeout elapses: start new election
-            if (System.nanoTime() > electionStart)
+            if ((System.nanoTime() - electionStart) > electionTimeout)
                 return Role.CANDIDATE;
         }
     }
@@ -294,10 +296,13 @@ public class Node {
         messages.add(wrapper);
     }
 
+    //compute random election timeout between 150 and 350 ms
     public long computeElectionTimeout(long min, long max) {
-        long diff = max - min;
-        long random = (int) ((Math.random() * 10000) % diff) + min;
-        return random;
+        Random r = new Random();
+        int low = 150000000;
+        int high = 350000000;
+        int result = r.nextInt(high - low) + low;
+        return result;
     }
 
     public void startElectionTimer() {
