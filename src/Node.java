@@ -28,7 +28,7 @@ public class Node {
     private int votesReceivedCount; // need this for candidates method
     private static int numberOfNodes; //need this for candidates method;
     private long lastTimeReceivedAppendEntriesFromLeader;
-    private long electionTimeout;
+    private int electionTimeout;
     private ArrayList<String> listOfNodes;
     private long electionStart;
     private String leaderId; //current leader
@@ -51,7 +51,7 @@ public class Node {
         this.nextIndex = null;
         this.matchIndex = null;
         this.lastTimeReceivedAppendEntriesFromLeader = 0;
-        this.electionTimeout = computeElectionTimeout(1, 5);
+        this.electionTimeout = computeElectionTimeout(150000000, 350000000);
         this.listOfNodes = network.loadNodes();
         numberOfNodes = this.listOfNodes.size();
         this.leaderId = "0";
@@ -294,11 +294,9 @@ public class Node {
     }
 
     //compute random election timeout between 150ms and 350 ms
-    public long computeElectionTimeout(long min, long max) {
+    public int computeElectionTimeout(int min, int max) {
         Random r = new Random();
-        int low = 150000000;
-        int high = 350000000;
-        int result = r.nextInt(high - low) + low;
+        int result = r.nextInt(max - min) + min;
         return result;
     }
 
