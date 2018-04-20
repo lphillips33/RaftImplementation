@@ -294,13 +294,14 @@ public class Node {
     }
 
     //compute random election timeout between 150ms and 350 ms
-    public int computeElectionTimeout(int min, int max) {
+    public int computeElectionTimeout(int max, int min) {
         Random r = new Random();
         int result = r.nextInt(max - min) + min;
         return result;
     }
 
     public void resetElectionTimer() {
+
         this.timer = System.nanoTime();
     }
 
