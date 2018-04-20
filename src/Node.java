@@ -2,11 +2,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.Timer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.Message;
 import com.reber.raft.AppendEntriesProtos.AppendEntries;
 import com.reber.raft.RequestVoteProtos.RequestVote;
 import com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse;
@@ -87,7 +85,7 @@ public class Node {
         long lastTimeReceivedMessageFromClient = 0;
 
         //upon election: send initial empty AppendEntries RPCs (heartbeat) to each server; repeat during idle periods to prevent election timeouts
-        AppendEntries appendEntriesHeartbeat = AppendEntries.newBuilder().build();
+        AppendEntries appendEntriesHeartbeat = AppendEntries.newBuilder().addEntries(AppendEntries.Entry.newBuilder().setTermNumber(this.currentTerm).setMessage(null)).build();
 
         byte[] dataToSend = appendEntriesHeartbeat.toByteArray();
 
@@ -117,7 +115,6 @@ public class Node {
                 }
             }
 
-            
             //We haven't received a message in over a second
             if((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
                 for (String destination : listOfNodes) {
@@ -208,7 +205,6 @@ public class Node {
         }
     }
 
-    //KEEP
     public Role candidate() throws UnknownHostException, InvalidProtocolBufferException {
 
         //start election
@@ -297,7 +293,7 @@ public class Node {
         messages.add(wrapper);
     }
 
-    //compute random election timeout between 150 and 350 ms
+    //compute random election timeout between 150ms and 350 ms
     public long computeElectionTimeout(long min, long max) {
         Random r = new Random();
         int low = 150000000;
@@ -305,7 +301,6 @@ public class Node {
         int result = r.nextInt(high - low) + low;
         return result;
     }
-
 
     public void resetElectionTimer() {
         this.timer = System.nanoTime();
