@@ -1,16 +1,12 @@
 import com.reber.raft.AppendEntriesProtos;
 import com.reber.raft.RequestVoteProtos;
 import com.reber.raft.RequestVoteResponseProtos;
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 //this has everything with sending messages and stuff
 public class Network {
@@ -21,6 +17,19 @@ public class Network {
          this.node = node;
     }
 
+    public ArrayList<String> loadNodes() throws Exception {
+        ArrayList<String> nodes = new ArrayList<>();
+
+        File file = new File("nodes.txt");
+        BufferedReader br = new BufferedReader(new FileReader(file));
+
+        String st;
+        while((st = br.readLine()) != null) {
+            nodes.add(st);
+        }
+
+        return nodes;
+    }
     //1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
     public void sendMessage(String destination, int type, int size, byte[] data) {
         //send destination, then type, then szie, then data
@@ -123,37 +132,7 @@ public class Network {
 
         int type = is.readInt();
 
-        switch (type) {
-            case 1: //requestVote
-                RequestVoteProtos.requestVote requestVoteMessage = RequestVoteProtos.requestVote.parseDelimitedFrom(is);
-
-                System.out.println("From server: " + requestVoteMessage.toString());
-
-                int term = requestVoteMessage.getTerm();
-                int currentTerm = 0;
-
-                if(term < currentTerm)
-                    return false;
-
-                String votedFor = node.getVotedFor();
-                String candidateId = requestVoteMessage.getCandidateId();
-
-                if((votedFor == null || votedFor.equals(candidateId)) && /* candidates log is at least up to date
-                 as recievers log */ )
-                    //grant vote
-
-                break;
-            case 2: //appendEntries
-                AppendEntriesProtos.AppendEntries appendEntriesMessage = AppendEntriesProtos.AppendEntries.parseDelimitedFrom(is);
-                break;
-            case 3: //requestVoteResponse
-                RequestVoteResponseProtos.requestVoteResponse requestVoteResponseMessage = RequestVoteResponseProtos.requestVoteResponse.parseDelimitedFrom(is);
-                break;
-            case 4: // appendEntriesResponse
-                AppendEntriesProtos.AppendEntries appendEntriesResponseMessage = AppendEntriesProtos.AppendEntries.parseDelimitedFrom(is);
-                break;
-        }
-
+        return true;
     }
 
 }
