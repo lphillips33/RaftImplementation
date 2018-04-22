@@ -32,18 +32,22 @@ public class Network {
     }
     //1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
     public void sendMessage(String destination, int type, byte[] data) {
-        //send destination, then type, then szie, then data
+        //send destination, then type, then size, then data
 
         new Thread(() -> {
             try(Socket socket = new Socket(destination, 6666);
-                PrintWriter out =
-                    new PrintWriter(socket.getOutputStream(), true))
-           {
-                
+                DataOutputStream out =
+                    new DataOutputStream(socket.getOutputStream()))
+            {
+
+                out.write(type);
+                out.write(data.length);
+                out.write(data);
 
             } catch(IOException e) {
                 System.err.println("Could not establish connection to " + destination + " on port 6666");
                 e.printStackTrace();
+                System.exit(1);
             }
         }).start();
     }
