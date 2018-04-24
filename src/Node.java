@@ -32,7 +32,6 @@ public class Node {
     private ArrayList<String> listOfNodes;
     private long electionStart;
     private String leaderId; //current leader
-    private long timer;
 
     ConcurrentLinkedQueue<MessageWrapper> messages; //holds our messages.  This is how we respond.
 
@@ -224,7 +223,6 @@ public class Node {
     public Role candidate() throws UnknownHostException, InvalidProtocolBufferException {
 
         //start election
-        this.electionStart = System.nanoTime();
         currentTerm++;
         this.votedFor = InetAddress.getLocalHost().toString();
         resetElectionTimer();
@@ -268,12 +266,19 @@ public class Node {
             byte[] data = message.getData();
 
             RequestVote requestVote = null;
+            AppendEntries appendEntries = null;
 
             switch (messageType) {
                 case 1: //RequestVote
                     requestVote = RequestVote.parseFrom(data);
                     break;
                 case 2: //AppendEntries
+                    appendEntries = AppendEntries.parseFrom(data);
+
+                    //If AppendEntries RPC received from new leader: convert to follower
+                    if (requestVote.getCandidateId().equals(leaderId))
+                        return Role.FOLLOWER;
+
                     break;
                 case 3: //RequestVoteResponse
                     break;
@@ -285,10 +290,6 @@ public class Node {
             if (this.votesReceivedCount >= Math.ceil(numberOfNodes / 2)) {
                 return Role.LEADER;
             }
-
-            //If AppendEntries RPC received from new leader: convert to follower
-            if (requestVote.getCandidateId().equals(leaderId))
-                return Role.FOLLOWER;
 
             //if RPC request or response contains term T > currentTerm: set currentTerm = t, convert to follower
             int termT = requestVote.getTerm();
@@ -318,7 +319,7 @@ public class Node {
     }
 
     public void resetElectionTimer() {
-        this.timer = System.nanoTime();
+        this.electionStart = System.nanoTime();
     }
 
 }
