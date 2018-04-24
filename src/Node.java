@@ -126,7 +126,10 @@ public class Node {
 
     public Role follower() throws UnknownHostException, InvalidProtocolBufferException {
 
+        this.votedFor = null;
+
         int termT = 0;
+        long lastTimeSinceReceivedAppendEntriesFromLeader = 0;
         while (true) {
 
             if (commitIndex > lastAppliedIndex) {
@@ -148,7 +151,7 @@ public class Node {
                         int term = requestVote.getTerm();
 
                         String destination = requestVote.getCandidateId();
-                        RequestVoteResponse requestVoteResponse = null;
+                        RequestVoteResponse requestVoteResponse = null; //respond to the candidate
                         byte[] dataToSend = null;
                         if (term < currentTerm) {
                             requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(this.currentTerm).setVoteGranted(false).build();
@@ -163,11 +166,16 @@ public class Node {
 
                         termT = requestVote.getTerm();
                         break;
+
                     case 2: //AppendEntries
+
+                        //received AppendEntriesRequest from leader
+                        lastTimeSinceReceivedAppendEntriesFromLeader = System.nanoTime();
+
                         appendEntries = AppendEntries.parseFrom(data);
                         term = appendEntries.getTerm();
 
-                        AppendEntriesResponse appendEntriesResponse = null;
+                        AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
                         destination = appendEntries.getLeaderId();
 
                         if (term < currentTerm) {
@@ -190,13 +198,21 @@ public class Node {
                         }
 
                         termT = appendEntries.getTerm();
+
                         break;
-                    case 3:
+                    case 3: // RequestVoteResponse
                         break;
-                    case 4:
+                    case 4: // AppendEntriesResponse
                         break;
                 }
             }
+
+            //no messages.  Compute the current time
+
+            long currentTime = System.nanoTime();
+
+            if(currentTime - lastTimeSinceReceivedAppendEntriesFromLeader > electionTimeout)
+                return Role.CANDIDATE;
 
             if (termT > currentTerm) {
                 currentTerm = termT;
@@ -282,8 +298,9 @@ public class Node {
             }
 
             //If election timeout elapses: start new election
-            if ((System.nanoTime() - electionStart) > electionTimeout)
-                return Role.CANDIDATE;
+            long currentTime = System.nanoTime();
+            if ((currentTime - electionStart) > electionTimeout)
+                return Role.CANDIDATE; //start a new election
         }
     }
 
@@ -301,7 +318,6 @@ public class Node {
     }
 
     public void resetElectionTimer() {
-
         this.timer = System.nanoTime();
     }
 
