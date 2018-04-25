@@ -197,6 +197,11 @@ public class Node {
 
                         termT = appendEntries.getTerm();
 
+                        if (termT > currentTerm) {
+                            currentTerm = termT;
+                            return Role.FOLLOWER;
+                        }
+
                         break;
                     case 3: // RequestVoteResponse
                         break;
@@ -206,16 +211,11 @@ public class Node {
             }
 
             //no messages.  Compute the current time
-
             long currentTime = System.nanoTime();
 
             if(currentTime - lastTimeSinceReceivedAppendEntriesFromLeader > electionTimeout)
                 return Role.CANDIDATE;
 
-            if (termT > currentTerm) {
-                currentTerm = termT;
-                return Role.FOLLOWER;
-            }
         }
     }
 
@@ -277,7 +277,6 @@ public class Node {
                     //If AppendEntries RPC received from new leader: convert to follower
                     if (requestVote.getCandidateId().equals(leaderId))
                         return Role.FOLLOWER;
-
                     break;
                 case 3: //RequestVoteResponse
                     break;
@@ -310,7 +309,7 @@ public class Node {
         messages.add(wrapper);
     }
 
-    //compute random election timeout between 150ms and 350 ms
+    //compute random election timeout between 150ms and 350 ms.  150000000, 350000000 are passed in as parameters
     public int computeElectionTimeout(int max, int min) {
         Random r = new Random();
         int result = r.nextInt(max - min) + min;
