@@ -54,7 +54,6 @@ public class Node {
         this.listOfNodes = network.loadNodes();
         numberOfNodes = this.listOfNodes.size();
         this.leaderId = "0";
-        this.timer = 0;
 
         try {
             this.nodeId = InetAddress.getLocalHost().toString();
