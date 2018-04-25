@@ -27,7 +27,6 @@ public class Node {
     Network network;
     private int votesReceivedCount; // need this for candidates method
     private static int numberOfNodes; //need this for candidates method;
-    private long lastTimeReceivedAppendEntriesFromLeader;
     private int electionTimeout;
     private ArrayList<String> listOfNodes;
     private long electionStart;
@@ -49,7 +48,6 @@ public class Node {
         this.lastAppliedIndex = 0;
         this.nextIndex = null;
         this.matchIndex = null;
-        this.lastTimeReceivedAppendEntriesFromLeader = 0;
         this.electionTimeout = computeElectionTimeout(150000000, 350000000);
         this.listOfNodes = network.loadNodes();
         numberOfNodes = this.listOfNodes.size();
