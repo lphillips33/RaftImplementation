@@ -128,8 +128,10 @@ public class Node {
 
         int termT = 0;
         long lastTimeSinceReceivedAppendEntriesFromLeader = 0;
+        long lastTimeSinceReceivedRequestVoteFromCandidate = 0;
         while (true) {
 
+            //If commitIndex > lastApplied: increment lastApplied, apply log[lastApplied] to state machine
             if (commitIndex > lastAppliedIndex) {
                 lastAppliedIndex++;
                 //apply(log.get(lastAppliedIndex));
@@ -145,16 +147,23 @@ public class Node {
 
                 switch (messageType) {
                     case 1: //RequestVote
+
+                        lastTimeSinceReceivedRequestVoteFromCandidate = System.nanoTime();
+
                         requestVote = RequestVote.parseFrom(data);
                         int term = requestVote.getTerm();
 
                         String destination = requestVote.getCandidateId();
+
+                        this.votedFor = requestVote.getCandidateId();
+
                         RequestVoteResponse requestVoteResponse = null; //respond to the candidate
                         byte[] dataToSend = null;
                         if (term < currentTerm) {
                             requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(this.currentTerm).setVoteGranted(false).build();
                         }
 
+                        //not sure about the part after &&
                         if ((this.votedFor == null || votedFor.equals(destination)) && requestVote.getLastLogIndex() > this.lastAppliedIndex) {
                             requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(term).setVoteGranted(true).build();
                         }
@@ -163,6 +172,8 @@ public class Node {
                         network.sendMessage(destination, 3, dataToSend.length, dataToSend);
 
                         termT = requestVote.getTerm();
+
+
                         break;
 
                     case 2: //AppendEntries
@@ -176,10 +187,12 @@ public class Node {
                         AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
                         destination = appendEntries.getLeaderId();
 
+                        //reply false if term < currentTerm
                         if (term < currentTerm) {
                             appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
                         }
 
+                        //Reply false if log doesn't contain an entry at prevLogIndex whose term matches prevLogTerm
                         if (!(log.get(appendEntries.getPrevLogIndex()).getTerm() == appendEntries.getPrevLogTerm())) {
                             appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
                         }
@@ -191,12 +204,14 @@ public class Node {
 
                         //Append any new entries not already in the log
 
+
+                        //If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry
                         if (appendEntries.getLeaderCommit() > this.commitIndex) {
                             commitIndex = Math.min(appendEntries.getLeaderCommit(), appendEntries.getEntriesCount());
                         }
 
+                        //If RPC request or response contains term T > currentTerm: set currentTerm = T, convert to follower
                         termT = appendEntries.getTerm();
-
                         if (termT > currentTerm) {
                             currentTerm = termT;
                             return Role.FOLLOWER;
@@ -210,10 +225,10 @@ public class Node {
                 }
             }
 
+            //If election timeout elapses without receiving AppendEntries RPC from current leader or granting vote to candidate: convert to candidate
             //no messages.  Compute the current time
             long currentTime = System.nanoTime();
-
-            if(currentTime - lastTimeSinceReceivedAppendEntriesFromLeader > electionTimeout)
+            if(currentTime - lastTimeSinceReceivedAppendEntriesFromLeader > electionTimeout || currentTime - lastTimeSinceReceivedRequestVoteFromCandidate > electionTimeout)
                 return Role.CANDIDATE;
 
         }
