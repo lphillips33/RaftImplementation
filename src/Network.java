@@ -97,9 +97,5 @@ public class Network {
             }
         }
     }
-
-    public ArrayList<String> loadNodes() {
-        return null;
-    }
-
+    
 }
