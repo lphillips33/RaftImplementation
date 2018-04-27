@@ -38,8 +38,8 @@ public class Node {
         FOLLOWER, LEADER, CANDIDATE
     }
 
-    public Node() {
-        network = new Network();
+    public Node() throws Exception {
+
         this.role = Role.FOLLOWER; //when servers start up, they begin as followers
         this.currentTerm = 0;
         this.votedFor = "0";
@@ -49,9 +49,11 @@ public class Node {
         this.nextIndex = null;
         this.matchIndex = null;
         this.electionTimeout = computeElectionTimeout(150000000, 350000000);
-        this.listOfNodes = network.loadNodes();
         numberOfNodes = this.listOfNodes.size();
         this.leaderId = "0";
+
+        network = new Network(this); //want this after all of the instance data is declared.
+        this.listOfNodes = network.loadNodes();
 
         try {
             this.nodeId = InetAddress.getLocalHost().toString();
@@ -86,7 +88,7 @@ public class Node {
         byte[] dataToSend = appendEntriesHeartbeat.toByteArray();
 
         for (String destination : listOfNodes) {
-            network.sendMessage(destination, 2, dataToSend.length, dataToSend);
+            network.sendMessage(destination, 2, dataToSend);
         }
 
         while (true) {
@@ -114,7 +116,7 @@ public class Node {
             //We haven't received a message in over a second
             if((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
                 for (String destination : listOfNodes) {
-                    network.sendMessage(destination, 2, dataToSend.length, dataToSend);
+                    network.sendMessage(destination, 2, dataToSend);
                 }
             }
         }
@@ -167,7 +169,7 @@ public class Node {
                         }
 
                         dataToSend = requestVoteResponse.toByteArray();
-                        network.sendMessage(destination, 3, dataToSend.length, dataToSend);
+                        network.sendMessage(destination, 3, dataToSend);
 
                         termT = requestVote.getTerm();
 
@@ -196,7 +198,7 @@ public class Node {
                         }
 
                         dataToSend = appendEntriesResponse.toByteArray();
-                        network.sendMessage(destination, 4, dataToSend.length, dataToSend);
+                        network.sendMessage(destination, 4, dataToSend);
 
                         //If an existing entry conflcits with a new one(same index but different terms), delete the existing entry and all that follow it
 
@@ -263,7 +265,7 @@ public class Node {
 
         //send RequestVote to all other servers
         for (String destination : listOfNodes) {
-            network.sendMessage(destination, 1, dataToSend.length, dataToSend);
+            network.sendMessage(destination, 1, dataToSend);
         }
 
         while (true) {
