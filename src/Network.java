@@ -1,160 +1,101 @@
 import com.reber.raft.AppendEntriesProtos;
 import com.reber.raft.RequestVoteProtos;
 import com.reber.raft.RequestVoteResponseProtos;
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.net.UnknownHostException;
 
 //this has everything with sending messages and stuff
 public class Network {
 
     Node node;
 
-    public Network() {
-         node = new Node();
+    public Network(Node node) {
+         this.node = node;
     }
 
+    public ArrayList<String> loadNodes() throws Exception {
+        ArrayList<String> nodes = new ArrayList<>();
+
+        File file = new File("nodes.txt");
+        BufferedReader br = new BufferedReader(new FileReader(file));
+
+        String st;
+        while((st = br.readLine()) != null) {
+            nodes.add(st);
+        }
+
+        return nodes;
+    }
     //1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
-    public void sendMessage(String destination, int type, int size, byte[] data) {
-        //send destination, then type, then szie, then data
+    public void sendMessage(String destination, int type, byte[] data) {
+        //send destination, then type, then size, then data
 
-        InetAddress address = null;
-        Socket socket = null;
-        DataOutputStream dOut = null;
-        DataInputStream dIn;
-        try{
-            InetAddress localIp = InetAddress.getLocalHost();
-            address = InetAddress.getByName(destination);
-            socket = new Socket(destination, 6666);
-            dOut = new DataOutputStream(socket.getOutputStream());
-            dIn = new DataInputStream(socket.getInputStream());
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+        new Thread(() -> {
+            try(Socket socket = new Socket(destination, 6666);
+                DataOutputStream out =
+                    new DataOutputStream(socket.getOutputStream()))
+            {
 
-        switch (type) {
-            case 1: //requestVote
+                out.write(type);
+                out.write(data.length);
+                out.write(data);
 
-                try {
-                    dOut.write(type);
-
-                    if(data != null)
-                        dOut.write(data);
-                    else
-                        System.out.println("data was empty");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                break;
-
-            case 2: //appendEntries
-
-                try {
-                    dOut.write(type);
-                } catch(IOException e) {
-                    e.printStackTrace();
-                }
-
-                break;
-
-            case 3: //requestVoteResponse
-
-                try {
-                    dOut.write(type);
-                } catch(IOException e) {
-                    e.printStackTrace();
-                }
-
-                break;
-
-            case 4: // appendEntriesResponse
-
-                try {
-                    dOut.write(type);
-                } catch(IOException e) {
-                    e.printStackTrace();
-                }
-
-                break;
-
-        }
-
-
+            } catch(IOException e) {
+                System.err.println("Could not establish connection to " + destination + " on port 6666");
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }).start();
     }
-
-
-    /*
-
-        APPEND ENTRIES
-
-         //Reply false if term < currentTerm
-        // Reply false if log doesn't contain an entry at prevLogIndex whose term matches prevLogTerm
-        //If an existing entry conflicts with a new one (same index but different terms), delete the existing entry and all that follow it
-        //Append any new entries not already in the log
-        // If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry)
-
-
-        REQUEST VOTE
-
-         //Reply false if term < currentTerm
-        // If votedFor is null or candidateId, and candidate's log is at least as up-to-date as receiver's log, grant vote
-
-     */
-
 
     // 1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
-    public Boolean receiveMessage() throws IOException {
+    public void listen(int portNumber) throws IOException {
 
-        ServerSocket serverSoc = new ServerSocket(666);
+        boolean listening = true;
 
-        Socket connection = serverSoc.accept();
-        System.out.println("Accepting client " + connection.getRemoteSocketAddress().toString());
-        DataInputStream is = new DataInputStream(connection.getInputStream());
+        Thread t = new Thread(() -> {
+            try (ServerSocket serverSocket = new ServerSocket(portNumber)) {
+                while (listening) {
+                    new RaftNetThread(serverSocket.accept(), node).start();
+                }
+            } catch (IOException e) {
+                System.err.println("Could not listen on port " + portNumber);
+                System.exit(-1);
+            }
+        });
+        t.start();
+    }
 
-        //read in the type
+    public class RaftNetThread extends Thread {
+        public Node node;
+        public Socket socket;
 
-        int type = is.readInt();
-
-        switch (type) {
-            case 1: //requestVote
-                RequestVoteProtos.requestVote requestVoteMessage = RequestVoteProtos.requestVote.parseDelimitedFrom(is);
-
-                System.out.println("From server: " + requestVoteMessage.toString());
-
-                int term = requestVoteMessage.getTerm();
-                int currentTerm = 0;
-
-                if(term < currentTerm)
-                    return false;
-
-                String votedFor = node.getVotedFor();
-                String candidateId = requestVoteMessage.getCandidateId();
-
-                if((votedFor == null || votedFor.equals(candidateId)) && /* candidates log is at least up to date
-                 as recievers log */ )
-                    //grant vote
-
-                break;
-            case 2: //appendEntries
-                AppendEntriesProtos.AppendEntries appendEntriesMessage = AppendEntriesProtos.AppendEntries.parseDelimitedFrom(is);
-                break;
-            case 3: //requestVoteResponse
-                RequestVoteResponseProtos.requestVoteResponse requestVoteResponseMessage = RequestVoteResponseProtos.requestVoteResponse.parseDelimitedFrom(is);
-                break;
-            case 4: // appendEntriesResponse
-                AppendEntriesProtos.AppendEntries appendEntriesResponseMessage = AppendEntriesProtos.AppendEntries.parseDelimitedFrom(is);
-                break;
+        public RaftNetThread(Socket socket, Node node) {
+            this.socket = socket;
+            this.node = node;
         }
 
+        public void run() {
+            try (
+                    PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                    DataInputStream in = new DataInputStream(socket.getInputStream())
+            ) {
+                int type = in.readInt();
+                int length = in.readInt();
+
+                byte[] payload = new byte[length];
+                in.readFully(payload);
+
+                node.newMessage(type, payload);
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public ArrayList<String> loadNodes() {
