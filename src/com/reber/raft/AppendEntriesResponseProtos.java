@@ -19,13 +19,13 @@ public final class AppendEntriesResponseProtos {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional int32 currentTerm = 1;</code>
+     * <code>optional int32 term = 1;</code>
      */
-    boolean hasCurrentTerm();
+    boolean hasTerm();
     /**
-     * <code>optional int32 currentTerm = 1;</code>
+     * <code>optional int32 term = 1;</code>
      */
-    int getCurrentTerm();
+    int getTerm();
 
     /**
      * <code>optional bool success = 2;</code>
@@ -49,7 +49,7 @@ public final class AppendEntriesResponseProtos {
       super(builder);
     }
     private AppendEntriesResponse() {
-      currentTerm_ = 0;
+      term_ = 0;
       success_ = false;
     }
 
@@ -86,7 +86,7 @@ public final class AppendEntriesResponseProtos {
             }
             case 8: {
               bitField0_ |= 0x00000001;
-              currentTerm_ = input.readInt32();
+              term_ = input.readInt32();
               break;
             }
             case 16: {
@@ -119,19 +119,19 @@ public final class AppendEntriesResponseProtos {
     }
 
     private int bitField0_;
-    public static final int CURRENTTERM_FIELD_NUMBER = 1;
-    private int currentTerm_;
+    public static final int TERM_FIELD_NUMBER = 1;
+    private int term_;
     /**
-     * <code>optional int32 currentTerm = 1;</code>
+     * <code>optional int32 term = 1;</code>
      */
-    public boolean hasCurrentTerm() {
+    public boolean hasTerm() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional int32 currentTerm = 1;</code>
+     * <code>optional int32 term = 1;</code>
      */
-    public int getCurrentTerm() {
-      return currentTerm_;
+    public int getTerm() {
+      return term_;
     }
 
     public static final int SUCCESS_FIELD_NUMBER = 2;
@@ -162,7 +162,7 @@ public final class AppendEntriesResponseProtos {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeInt32(1, currentTerm_);
+        output.writeInt32(1, term_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBool(2, success_);
@@ -177,7 +177,7 @@ public final class AppendEntriesResponseProtos {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(1, currentTerm_);
+          .computeInt32Size(1, term_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -199,10 +199,10 @@ public final class AppendEntriesResponseProtos {
       com.reber.raft.AppendEntriesResponseProtos.AppendEntriesResponse other = (com.reber.raft.AppendEntriesResponseProtos.AppendEntriesResponse) obj;
 
       boolean result = true;
-      result = result && (hasCurrentTerm() == other.hasCurrentTerm());
-      if (hasCurrentTerm()) {
-        result = result && (getCurrentTerm()
-            == other.getCurrentTerm());
+      result = result && (hasTerm() == other.hasTerm());
+      if (hasTerm()) {
+        result = result && (getTerm()
+            == other.getTerm());
       }
       result = result && (hasSuccess() == other.hasSuccess());
       if (hasSuccess()) {
@@ -220,9 +220,9 @@ public final class AppendEntriesResponseProtos {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasCurrentTerm()) {
-        hash = (37 * hash) + CURRENTTERM_FIELD_NUMBER;
-        hash = (53 * hash) + getCurrentTerm();
+      if (hasTerm()) {
+        hash = (37 * hash) + TERM_FIELD_NUMBER;
+        hash = (53 * hash) + getTerm();
       }
       if (hasSuccess()) {
         hash = (37 * hash) + SUCCESS_FIELD_NUMBER;
@@ -358,7 +358,7 @@ public final class AppendEntriesResponseProtos {
       }
       public Builder clear() {
         super.clear();
-        currentTerm_ = 0;
+        term_ = 0;
         bitField0_ = (bitField0_ & ~0x00000001);
         success_ = false;
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -389,7 +389,7 @@ public final class AppendEntriesResponseProtos {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.currentTerm_ = currentTerm_;
+        result.term_ = term_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
@@ -436,8 +436,8 @@ public final class AppendEntriesResponseProtos {
 
       public Builder mergeFrom(com.reber.raft.AppendEntriesResponseProtos.AppendEntriesResponse other) {
         if (other == com.reber.raft.AppendEntriesResponseProtos.AppendEntriesResponse.getDefaultInstance()) return this;
-        if (other.hasCurrentTerm()) {
-          setCurrentTerm(other.getCurrentTerm());
+        if (other.hasTerm()) {
+          setTerm(other.getTerm());
         }
         if (other.hasSuccess()) {
           setSuccess(other.getSuccess());
@@ -470,34 +470,34 @@ public final class AppendEntriesResponseProtos {
       }
       private int bitField0_;
 
-      private int currentTerm_ ;
+      private int term_ ;
       /**
-       * <code>optional int32 currentTerm = 1;</code>
+       * <code>optional int32 term = 1;</code>
        */
-      public boolean hasCurrentTerm() {
+      public boolean hasTerm() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional int32 currentTerm = 1;</code>
+       * <code>optional int32 term = 1;</code>
        */
-      public int getCurrentTerm() {
-        return currentTerm_;
+      public int getTerm() {
+        return term_;
       }
       /**
-       * <code>optional int32 currentTerm = 1;</code>
+       * <code>optional int32 term = 1;</code>
        */
-      public Builder setCurrentTerm(int value) {
+      public Builder setTerm(int value) {
         bitField0_ |= 0x00000001;
-        currentTerm_ = value;
+        term_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 currentTerm = 1;</code>
+       * <code>optional int32 term = 1;</code>
        */
-      public Builder clearCurrentTerm() {
+      public Builder clearTerm() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        currentTerm_ = 0;
+        term_ = 0;
         onChanged();
         return this;
       }
@@ -596,10 +596,10 @@ public final class AppendEntriesResponseProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\033AppendEntriesResponse.proto\022\004raft\"=\n\025A" +
-      "ppendEntriesResponse\022\023\n\013currentTerm\030\001 \001(" +
-      "\005\022\017\n\007success\030\002 \001(\010B-\n\016com.reber.raftB\033Ap" +
-      "pendEntriesResponseProtos"
+      "\n\033AppendEntriesResponse.proto\022\004raft\"6\n\025A" +
+      "ppendEntriesResponse\022\014\n\004term\030\001 \001(\005\022\017\n\007su" +
+      "ccess\030\002 \001(\010B-\n\016com.reber.raftB\033AppendEnt" +
+      "riesResponseProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -618,7 +618,7 @@ public final class AppendEntriesResponseProtos {
     internal_static_raft_AppendEntriesResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_raft_AppendEntriesResponse_descriptor,
-        new java.lang.String[] { "CurrentTerm", "Success", });
+        new java.lang.String[] { "Term", "Success", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

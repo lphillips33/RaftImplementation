@@ -14,8 +14,8 @@ public final class RequestVoteResponseProtos {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
-  public interface requestVoteResponseOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:tutorial.requestVoteResponse)
+  public interface RequestVoteResponseOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:tutorial.RequestVoteResponse)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -37,18 +37,18 @@ public final class RequestVoteResponseProtos {
     boolean getVoteGranted();
   }
   /**
-   * Protobuf type {@code tutorial.requestVoteResponse}
+   * Protobuf type {@code tutorial.RequestVoteResponse}
    */
-  public  static final class requestVoteResponse extends
+  public  static final class RequestVoteResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:tutorial.requestVoteResponse)
-      requestVoteResponseOrBuilder {
+      // @@protoc_insertion_point(message_implements:tutorial.RequestVoteResponse)
+      RequestVoteResponseOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use requestVoteResponse.newBuilder() to construct.
-    private requestVoteResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use RequestVoteResponse.newBuilder() to construct.
+    private RequestVoteResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private requestVoteResponse() {
+    private RequestVoteResponse() {
       term_ = 0;
       voteGranted_ = false;
     }
@@ -58,7 +58,7 @@ public final class RequestVoteResponseProtos {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private requestVoteResponse(
+    private RequestVoteResponse(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -108,14 +108,14 @@ public final class RequestVoteResponseProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.reber.raft.RequestVoteResponseProtos.internal_static_tutorial_requestVoteResponse_descriptor;
+      return com.reber.raft.RequestVoteResponseProtos.internal_static_tutorial_RequestVoteResponse_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.reber.raft.RequestVoteResponseProtos.internal_static_tutorial_requestVoteResponse_fieldAccessorTable
+      return com.reber.raft.RequestVoteResponseProtos.internal_static_tutorial_RequestVoteResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.reber.raft.RequestVoteResponseProtos.requestVoteResponse.class, com.reber.raft.RequestVoteResponseProtos.requestVoteResponse.Builder.class);
+              com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse.class, com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse.Builder.class);
     }
 
     private int bitField0_;
@@ -193,10 +193,10 @@ public final class RequestVoteResponseProtos {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof com.reber.raft.RequestVoteResponseProtos.requestVoteResponse)) {
+      if (!(obj instanceof com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse)) {
         return super.equals(obj);
       }
-      com.reber.raft.RequestVoteResponseProtos.requestVoteResponse other = (com.reber.raft.RequestVoteResponseProtos.requestVoteResponse) obj;
+      com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse other = (com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse) obj;
 
       boolean result = true;
       result = result && (hasTerm() == other.hasTerm());
@@ -234,69 +234,69 @@ public final class RequestVoteResponseProtos {
       return hash;
     }
 
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseFrom(
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseFrom(
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseFrom(
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseFrom(
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseFrom(byte[] data)
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseFrom(
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseFrom(java.io.InputStream input)
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseFrom(
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseDelimitedFrom(java.io.InputStream input)
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseDelimitedFrom(
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseFrom(
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parseFrom(
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -308,7 +308,7 @@ public final class RequestVoteResponseProtos {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(com.reber.raft.RequestVoteResponseProtos.requestVoteResponse prototype) {
+    public static Builder newBuilder(com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
@@ -323,25 +323,25 @@ public final class RequestVoteResponseProtos {
       return builder;
     }
     /**
-     * Protobuf type {@code tutorial.requestVoteResponse}
+     * Protobuf type {@code tutorial.RequestVoteResponse}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:tutorial.requestVoteResponse)
-        com.reber.raft.RequestVoteResponseProtos.requestVoteResponseOrBuilder {
+        // @@protoc_insertion_point(builder_implements:tutorial.RequestVoteResponse)
+        com.reber.raft.RequestVoteResponseProtos.RequestVoteResponseOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.reber.raft.RequestVoteResponseProtos.internal_static_tutorial_requestVoteResponse_descriptor;
+        return com.reber.raft.RequestVoteResponseProtos.internal_static_tutorial_RequestVoteResponse_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.reber.raft.RequestVoteResponseProtos.internal_static_tutorial_requestVoteResponse_fieldAccessorTable
+        return com.reber.raft.RequestVoteResponseProtos.internal_static_tutorial_RequestVoteResponse_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                com.reber.raft.RequestVoteResponseProtos.requestVoteResponse.class, com.reber.raft.RequestVoteResponseProtos.requestVoteResponse.Builder.class);
+                com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse.class, com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse.Builder.class);
       }
 
-      // Construct using com.reber.raft.RequestVoteResponseProtos.requestVoteResponse.newBuilder()
+      // Construct using com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -367,23 +367,23 @@ public final class RequestVoteResponseProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.reber.raft.RequestVoteResponseProtos.internal_static_tutorial_requestVoteResponse_descriptor;
+        return com.reber.raft.RequestVoteResponseProtos.internal_static_tutorial_RequestVoteResponse_descriptor;
       }
 
-      public com.reber.raft.RequestVoteResponseProtos.requestVoteResponse getDefaultInstanceForType() {
-        return com.reber.raft.RequestVoteResponseProtos.requestVoteResponse.getDefaultInstance();
+      public com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse getDefaultInstanceForType() {
+        return com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse.getDefaultInstance();
       }
 
-      public com.reber.raft.RequestVoteResponseProtos.requestVoteResponse build() {
-        com.reber.raft.RequestVoteResponseProtos.requestVoteResponse result = buildPartial();
+      public com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse build() {
+        com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public com.reber.raft.RequestVoteResponseProtos.requestVoteResponse buildPartial() {
-        com.reber.raft.RequestVoteResponseProtos.requestVoteResponse result = new com.reber.raft.RequestVoteResponseProtos.requestVoteResponse(this);
+      public com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse buildPartial() {
+        com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse result = new com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -426,16 +426,16 @@ public final class RequestVoteResponseProtos {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.reber.raft.RequestVoteResponseProtos.requestVoteResponse) {
-          return mergeFrom((com.reber.raft.RequestVoteResponseProtos.requestVoteResponse)other);
+        if (other instanceof com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse) {
+          return mergeFrom((com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(com.reber.raft.RequestVoteResponseProtos.requestVoteResponse other) {
-        if (other == com.reber.raft.RequestVoteResponseProtos.requestVoteResponse.getDefaultInstance()) return this;
+      public Builder mergeFrom(com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse other) {
+        if (other == com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse.getDefaultInstance()) return this;
         if (other.hasTerm()) {
           setTerm(other.getTerm());
         }
@@ -455,11 +455,11 @@ public final class RequestVoteResponseProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.reber.raft.RequestVoteResponseProtos.requestVoteResponse parsedMessage = null;
+        com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.reber.raft.RequestVoteResponseProtos.requestVoteResponse) e.getUnfinishedMessage();
+          parsedMessage = (com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -544,49 +544,49 @@ public final class RequestVoteResponseProtos {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:tutorial.requestVoteResponse)
+      // @@protoc_insertion_point(builder_scope:tutorial.RequestVoteResponse)
     }
 
-    // @@protoc_insertion_point(class_scope:tutorial.requestVoteResponse)
-    private static final com.reber.raft.RequestVoteResponseProtos.requestVoteResponse DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:tutorial.RequestVoteResponse)
+    private static final com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new com.reber.raft.RequestVoteResponseProtos.requestVoteResponse();
+      DEFAULT_INSTANCE = new com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse();
     }
 
-    public static com.reber.raft.RequestVoteResponseProtos.requestVoteResponse getDefaultInstance() {
+    public static com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<requestVoteResponse>
-        PARSER = new com.google.protobuf.AbstractParser<requestVoteResponse>() {
-      public requestVoteResponse parsePartialFrom(
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<RequestVoteResponse>
+        PARSER = new com.google.protobuf.AbstractParser<RequestVoteResponse>() {
+      public RequestVoteResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new requestVoteResponse(input, extensionRegistry);
+        return new RequestVoteResponse(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<requestVoteResponse> parser() {
+    public static com.google.protobuf.Parser<RequestVoteResponse> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<requestVoteResponse> getParserForType() {
+    public com.google.protobuf.Parser<RequestVoteResponse> getParserForType() {
       return PARSER;
     }
 
-    public com.reber.raft.RequestVoteResponseProtos.requestVoteResponse getDefaultInstanceForType() {
+    public com.reber.raft.RequestVoteResponseProtos.RequestVoteResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_tutorial_requestVoteResponse_descriptor;
+    internal_static_tutorial_RequestVoteResponse_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_tutorial_requestVoteResponse_fieldAccessorTable;
+      internal_static_tutorial_RequestVoteResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -597,7 +597,7 @@ public final class RequestVoteResponseProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\031RequestVoteResponse.proto\022\010tutorial\"8\n" +
-      "\023requestVoteResponse\022\014\n\004term\030\001 \001(\005\022\023\n\013vo" +
+      "\023RequestVoteResponse\022\014\n\004term\030\001 \001(\005\022\023\n\013vo" +
       "teGranted\030\002 \001(\010B+\n\016com.reber.raftB\031Reque" +
       "stVoteResponseProtos"
     };
@@ -613,11 +613,11 @@ public final class RequestVoteResponseProtos {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
-    internal_static_tutorial_requestVoteResponse_descriptor =
+    internal_static_tutorial_RequestVoteResponse_descriptor =
       getDescriptor().getMessageTypes().get(0);
-    internal_static_tutorial_requestVoteResponse_fieldAccessorTable = new
+    internal_static_tutorial_RequestVoteResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_tutorial_requestVoteResponse_descriptor,
+        internal_static_tutorial_RequestVoteResponse_descriptor,
         new java.lang.String[] { "Term", "VoteGranted", });
   }
 
