@@ -52,8 +52,6 @@ public class Node {
         numberOfNodes = this.listOfNodes.size();
         this.leaderId = "0";
 
-        network = new Network(this); //want this after all of the instance data is declared.
-        this.listOfNodes = network.loadNodes();
 
         try {
             this.nodeId = InetAddress.getLocalHost().toString();
@@ -61,6 +59,9 @@ public class Node {
             e.printStackTrace();
         }
 
+        network = new Network(this); //want this after all of the instance data is declared.
+        this.listOfNodes = network.loadNodes();
+        
     }
 
     public void run() throws UnknownHostException, InvalidProtocolBufferException {
