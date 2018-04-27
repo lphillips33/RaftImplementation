@@ -48,8 +48,7 @@ public class Node {
         this.lastAppliedIndex = 0;
         this.nextIndex = null;
         this.matchIndex = null;
-        this.electionTimeout = computeElectionTimeout(150000000, 350000000);
-        numberOfNodes = this.listOfNodes.size();
+        this.electionTimeout = computeElectionTimeout(350000000, 150000000);
         this.leaderId = "0";
 
 
@@ -61,7 +60,7 @@ public class Node {
 
         network = new Network(this); //want this after all of the instance data is declared.
         this.listOfNodes = network.loadNodes();
-        
+        numberOfNodes = this.listOfNodes.size();
     }
 
     public void run() throws UnknownHostException, InvalidProtocolBufferException {
