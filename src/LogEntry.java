@@ -21,4 +21,13 @@ public class LogEntry {
     public void setCommands(ArrayList<String> commands) {
         this.commands = commands;
     }
+
+    public boolean containsCommand(String command) {
+        for(int i = 0; i < commands.size(); i++) {
+            if(commands.get(i).equals(command)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -1,6 +1,7 @@
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -137,7 +138,8 @@ public class Node {
                 //apply(log.get(lastAppliedIndex));
             }
 
-            if (!messages.isEmpty()) {
+            //if (!messages.isEmpty()) {
+            if(messages != null && !messages.isEmpty()) {
                 MessageWrapper message = messages.poll();
                 int messageType = message.getMessageType();
                 byte[] data = message.getData();
@@ -203,7 +205,18 @@ public class Node {
                         //If an existing entry conflcits with a new one(same index but different terms), delete the existing entry and all that follow it
 
                         //Append any new entries not already in the log
+                        List<AppendEntries.Entry> list = appendEntries.getEntriesList();
+                        for(int i = 0; i < list.size(); i++) {
+                            AppendEntries.Entry tempEntry = list.get(i);
+                            String tempMessage = tempEntry.getMessage();
 
+                            if(!(log.get(i).containsCommand(tempMessage))) { //entry not in the log
+                                LogEntry logToAdd = new LogEntry();
+                                logToAdd.setTerm(currentTerm);
+                                logToAdd.setCommands(null);
+                                append(logToAdd);
+                            }
+                        }
 
                         //If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry
                         if (appendEntries.getLeaderCommit() > this.commitIndex) {
@@ -251,6 +264,7 @@ public class Node {
             e.printStackTrace();
         }
 
+        //Index out of bounds exception 
         int tempLastLogIndex = log.size();
         int tempLastLogTerm = log.get(log.size()).getTerm();
 
@@ -335,4 +349,7 @@ public class Node {
         this.electionStart = System.nanoTime();
     }
 
+    public void append(LogEntry entry) {
+        log.add(entry);
+    }
 }

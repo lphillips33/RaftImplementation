@@ -8,11 +8,11 @@ public class Main {
     public static void main(String[] args) throws Exception {
         System.out.println("Hello World!");
 
+        //Network object in Node class
         Node node = new Node();
 
         node.run();
 
-        Network network = new Network(node);
 
         //AppendEntries appendEntries = AppendEntries.newBuilder().set
 
