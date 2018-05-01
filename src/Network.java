@@ -36,7 +36,7 @@ public class Network {
     public void sendMessage(String destination, int type, byte[] data) throws  InvalidProtocolBufferException {
         //send destination, then type, then size, then data
 
-        printMessage(type, data);
+        printMessageBeforeConnection(type, data);
 
         new Thread(() -> {
             try(Socket socket = new Socket(destination, 6666);
@@ -57,20 +57,24 @@ public class Network {
     }
 
 
-    void printMessage(int type, byte[] payload) throws InvalidProtocolBufferException {
+    void printMessageBeforeConnection(int type, byte[] payload) throws InvalidProtocolBufferException {
         switch (type) {
             case 1:
                 RequestVoteProtos.RequestVote requestVote = RequestVoteProtos.RequestVote.parseFrom(payload);
-                System.out.println("RECEIVED THE FOLLOWING " + requestVote.toString());
+                System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  type);
+                System.out.println(requestVote.toString());
             case 2:
                 AppendEntriesProtos.AppendEntries appendEntries = AppendEntriesProtos.AppendEntries.parseFrom(payload);
-                System.out.println("RECEIVED THE FOLLOWING " + appendEntries.toString());
+                System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  type);
+                System.out.println(appendEntries.toString());
             case 3:
                 RequestVoteResponseProtos.RequestVoteResponse requestVoteResponse =  RequestVoteResponseProtos.RequestVoteResponse .parseFrom(payload);
-                System.out.println("RECEIVED THE FOLLOWING " + requestVoteResponse.toString());
+                System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  type);
+                System.out.println(requestVoteResponse.toString());
             case 4:
                 AppendEntriesResponseProtos.AppendEntriesResponse appendEntriesResponse = AppendEntriesResponseProtos.AppendEntriesResponse.parseFrom(payload);
-                System.out.println("RECEIVED THE FOLLOWING " + appendEntriesResponse.toString());
+                System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  type);
+                System.out.println(appendEntriesResponse.toString());
         }
     }
 
@@ -126,16 +130,20 @@ public class Network {
             switch (type) {
                 case 1:
                     RequestVoteProtos.RequestVote requestVote = RequestVoteProtos.RequestVote.parseFrom(payload);
-                    System.out.println("RECEIVED THE FOLLOWING " + requestVote.toString());
+                    System.out.println("RECEIVED THE FOLLOWING OF TYPE " +  type);
+                    System.out.println(requestVote.toString());
                 case 2:
                     AppendEntriesProtos.AppendEntries appendEntries = AppendEntriesProtos.AppendEntries.parseFrom(payload);
-                    System.out.println("RECEIVED THE FOLLOWING " + appendEntries.toString());
+                    System.out.println("RECEIVED THE FOLLOWING OF TYPE " +  type);
+                    System.out.println(appendEntries.toString());
                 case 3:
                     RequestVoteResponseProtos.RequestVoteResponse requestVoteResponse =  RequestVoteResponseProtos.RequestVoteResponse .parseFrom(payload);
-                    System.out.println("RECEIVED THE FOLLOWING " + requestVoteResponse.toString());
+                    System.out.println("RECEIVED THE FOLLOWING OF TYPE " +  type);
+                    System.out.println(requestVoteResponse.toString());
                 case 4:
                     AppendEntriesResponseProtos.AppendEntriesResponse appendEntriesResponse = AppendEntriesResponseProtos.AppendEntriesResponse.parseFrom(payload);
-                    System.out.println("RECEIVED THE FOLLOWING " + appendEntriesResponse.toString());
+                    System.out.println("RECEIVED THE FOLLOWING OF TYPE " +  type);
+                    System.out.println(appendEntriesResponse.toString());
             }
         }
 

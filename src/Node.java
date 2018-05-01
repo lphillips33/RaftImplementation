@@ -54,7 +54,8 @@ public class Node {
 
 
         try {
-            this.nodeId = InetAddress.getLocalHost().toString();
+            String fullIP = InetAddress.getLocalHost().toString();
+            this.nodeId = fullIP.substring(fullIP.lastIndexOf("/") + 1);
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -162,7 +163,8 @@ public class Node {
                         requestVote = RequestVote.parseFrom(data);
                         int term = requestVote.getTerm();
 
-                        String destination = requestVote.getCandidateId();
+                        //String destination =  requestVote.getCandidateId();
+                        String destination = requestVote.getCandidateId().substring(requestVote.getCandidateId().lastIndexOf("/") + 1);
 
                         RequestVoteResponse requestVoteResponse = null; //respond to the candidate
 
@@ -175,7 +177,9 @@ public class Node {
                         //receiver's log, grant vote.  not sure about the part after &&
                         if ((this.votedFor == null || votedFor.equals(requestVote.getCandidateId())) && requestVote.getLastLogIndex() >= this.lastAppliedIndex) {
                             requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(term).setVoteGranted(true).build();
-                            this.votedFor = requestVote.getCandidateId();
+                            //this.votedFor = requestVote.getCandidateId();
+                            this.votedFor = requestVote.getCandidateId().substring(requestVote.getCandidateId().lastIndexOf("/") + 1);
+
                             lastTimeSinceGrantedVoteToCandidate = System.nanoTime();
                         }
 
@@ -198,7 +202,8 @@ public class Node {
 
                         AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
 
-                        destination = appendEntries.getLeaderId();
+                        destination = appendEntries.getLeaderId().substring(appendEntries.getLeaderId().lastIndexOf("/") + 1);
+                        //destination = appendEntries.getLeaderId();
 
                         //reply false if term < currentTerm
                         if (term < currentTerm) {
@@ -286,8 +291,8 @@ public class Node {
 
         //send RequestVote RPCs to all other servers
         int tempCurrentTerm = this.currentTerm;
-        String tempCandidateId = InetAddress.getLocalHost().toString(); //who is requesting a vote
-
+        //String tempCandidateId = InetAddress.getLocalHost().toString(); //who is requesting a vote
+        String tempCandidateId = InetAddress.getLocalHost().toString().substring(InetAddress.getLocalHost().toString().lastIndexOf("/") + 1);
 
         int tempLastLogIndex = 0;
         int tempLastLogTerm = 0;
