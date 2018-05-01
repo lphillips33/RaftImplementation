@@ -129,7 +129,7 @@ public class Node {
 
         int termT = 0;
         long lastTimeSinceReceivedAppendEntriesFromLeader = 0;
-        long lastTimeSinceReceivedRequestVoteFromCandidate = 0;
+        long lastTimeSinceGrantedVoteToCandidate = 0;
         while (true) {
 
             //If commitIndex > lastApplied: increment lastApplied, apply log[lastApplied] to state machine
@@ -144,37 +144,36 @@ public class Node {
                 int messageType = message.getMessageType();
                 byte[] data = message.getData();
 
-                RequestVote requestVote = null;
+                RequestVote requestVote;
                 AppendEntries appendEntries = null;
 
                 switch (messageType) {
                     case 1: //RequestVote
-
-                        lastTimeSinceReceivedRequestVoteFromCandidate = System.nanoTime();
 
                         requestVote = RequestVote.parseFrom(data);
                         int term = requestVote.getTerm();
 
                         String destination = requestVote.getCandidateId();
 
-                        this.votedFor = requestVote.getCandidateId();
-
                         RequestVoteResponse requestVoteResponse = null; //respond to the candidate
-                        byte[] dataToSend = null;
+
+                        //Reply false if term < currentTerm
                         if (term < currentTerm) {
                             requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(this.currentTerm).setVoteGranted(false).build();
                         }
 
-                        //not sure about the part after &&
-                        if ((this.votedFor == null || votedFor.equals(destination)) && requestVote.getLastLogIndex() > this.lastAppliedIndex) {
+                        //If votedFor is null or candidateId, and candidate's log is at least as up-to-data as
+                        //receiver's log, grant vote.  not sure about the part after &&
+                        if ((this.votedFor == null || votedFor.equals(requestVote.getCandidateId())) && requestVote.getLastLogIndex() >= this.lastAppliedIndex) {
                             requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(term).setVoteGranted(true).build();
+                            this.votedFor = requestVote.getCandidateId();
+                            lastTimeSinceGrantedVoteToCandidate = System.nanoTime();
                         }
 
-                        dataToSend = requestVoteResponse.toByteArray();
+                        byte[] dataToSend = requestVoteResponse.toByteArray();
                         network.sendMessage(destination, 3, dataToSend);
 
                         termT = requestVote.getTerm();
-
 
                         break;
 
@@ -187,6 +186,7 @@ public class Node {
                         term = appendEntries.getTerm();
 
                         AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
+
                         destination = appendEntries.getLeaderId();
 
                         //reply false if term < currentTerm
@@ -202,7 +202,8 @@ public class Node {
                         dataToSend = appendEntriesResponse.toByteArray();
                         network.sendMessage(destination, 4, dataToSend);
 
-                        //If an existing entry conflcits with a new one(same index but different terms), delete the existing entry and all that follow it
+                        //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
+
 
                         //Append any new entries not already in the log
                         List<AppendEntries.Entry> list = appendEntries.getEntriesList();
@@ -223,25 +224,35 @@ public class Node {
                             commitIndex = Math.min(appendEntries.getLeaderCommit(), appendEntries.getEntriesCount());
                         }
 
-                        //If RPC request or response contains term T > currentTerm: set currentTerm = T, convert to follower
-                        termT = appendEntries.getTerm();
-                        if (termT > currentTerm) {
-                            currentTerm = termT;
-                            return Role.FOLLOWER;
-                        }
+                        break;
+
+                    case 3: //RequestVoteResponse
+
+                        //If RPC request or response contains term T > currentTerm
+                        requestVoteResponse = RequestVoteResponse.parseFrom(data);
+                        termT = requestVoteResponse.getTerm();
 
                         break;
-                    case 3: // RequestVoteResponse
+                    case 4: //AppendEntriesResponse
+                        //If RPC request or response contains term T > currentTerm
+                        appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
+                        termT = appendEntriesResponse.getTerm();
+
                         break;
-                    case 4: // AppendEntriesResponse
-                        break;
+                }
+
+                //If RPC request or response contains term T > currentTerm: set currentTerm = T, convert to follower
+                termT = appendEntries.getTerm();
+                if (termT > currentTerm) {
+                    currentTerm = termT;
+                    return Role.FOLLOWER;
                 }
             }
 
             //If election timeout elapses without receiving AppendEntries RPC from current leader or granting vote to candidate: convert to candidate
             //no messages.  Compute the current time
             long currentTime = System.nanoTime();
-            if(currentTime - lastTimeSinceReceivedAppendEntriesFromLeader > electionTimeout || currentTime - lastTimeSinceReceivedRequestVoteFromCandidate > electionTimeout)
+            if(currentTime - lastTimeSinceReceivedAppendEntriesFromLeader > electionTimeout || currentTime - lastTimeSinceGrantedVoteToCandidate > electionTimeout)
                 return Role.CANDIDATE;
 
         }
@@ -264,7 +275,7 @@ public class Node {
             e.printStackTrace();
         }
 
-        //Index out of bounds exception 
+        //Index out of bounds exception
         int tempLastLogIndex = log.size();
         int tempLastLogTerm = log.get(log.size()).getTerm();
 

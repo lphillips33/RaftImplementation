@@ -13,7 +13,6 @@ public class LogEntry {
         return commands;
     }
 
-
     public void setTerm(int term) {
         this.term = term;
     }
