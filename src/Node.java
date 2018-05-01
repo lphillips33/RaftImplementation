@@ -62,6 +62,8 @@ public class Node {
         network = new Network(this); //want this after all of the instance data is declared.
         this.listOfNodes = network.loadNodes();
         numberOfNodes = this.listOfNodes.size();
+
+        this.network.listen(6666);
     }
 
     public void run() throws UnknownHostException, InvalidProtocolBufferException {
@@ -88,6 +90,8 @@ public class Node {
 
         byte[] dataToSend = appendEntriesHeartbeat.toByteArray();
 
+        //Once a candidate wins an election, it becomes leader.  It then sends
+        //heartbeat messages to all of the other servers to establish its authority and prevent new elections
         for (String destination : listOfNodes) {
             network.sendMessage(destination, 2, dataToSend);
         }
@@ -112,8 +116,11 @@ public class Node {
                     currentTerm = termT;
                     return Role.FOLLOWER;
                 }
+
+                lastTimeReceivedMessageFromClient = 0;
             }
 
+            //Leaders send periodic heartbeats(AppendEntries RPCs that carry no log entries) to all followers to maintain their authority
             //We haven't received a message in over a second
             if((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
                 for (String destination : listOfNodes) {
@@ -129,7 +136,7 @@ public class Node {
 
         int termT = 0;
         long lastTimeSinceReceivedAppendEntriesFromLeader = 0;
-        long lastTimeSinceReceivedRequestVoteFromCandidate = 0;
+        long lastTimeSinceGrantedVoteToCandidate = 0;
         while (true) {
 
             //If commitIndex > lastApplied: increment lastApplied, apply log[lastApplied] to state machine
@@ -144,37 +151,36 @@ public class Node {
                 int messageType = message.getMessageType();
                 byte[] data = message.getData();
 
-                RequestVote requestVote = null;
+                RequestVote requestVote;
                 AppendEntries appendEntries = null;
 
                 switch (messageType) {
                     case 1: //RequestVote
-
-                        lastTimeSinceReceivedRequestVoteFromCandidate = System.nanoTime();
 
                         requestVote = RequestVote.parseFrom(data);
                         int term = requestVote.getTerm();
 
                         String destination = requestVote.getCandidateId();
 
-                        this.votedFor = requestVote.getCandidateId();
-
                         RequestVoteResponse requestVoteResponse = null; //respond to the candidate
-                        byte[] dataToSend = null;
+
+                        //Reply false if term < currentTerm
                         if (term < currentTerm) {
                             requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(this.currentTerm).setVoteGranted(false).build();
                         }
 
-                        //not sure about the part after &&
-                        if ((this.votedFor == null || votedFor.equals(destination)) && requestVote.getLastLogIndex() > this.lastAppliedIndex) {
+                        //If votedFor is null or candidateId, and candidate's log is at least as up-to-data as
+                        //receiver's log, grant vote.  not sure about the part after &&
+                        if ((this.votedFor == null || votedFor.equals(requestVote.getCandidateId())) && requestVote.getLastLogIndex() >= this.lastAppliedIndex) {
                             requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(term).setVoteGranted(true).build();
+                            this.votedFor = requestVote.getCandidateId();
+                            lastTimeSinceGrantedVoteToCandidate = System.nanoTime();
                         }
 
-                        dataToSend = requestVoteResponse.toByteArray();
+                        byte[] dataToSend = requestVoteResponse.toByteArray();
                         network.sendMessage(destination, 3, dataToSend);
 
                         termT = requestVote.getTerm();
-
 
                         break;
 
@@ -187,6 +193,7 @@ public class Node {
                         term = appendEntries.getTerm();
 
                         AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
+
                         destination = appendEntries.getLeaderId();
 
                         //reply false if term < currentTerm
@@ -202,7 +209,8 @@ public class Node {
                         dataToSend = appendEntriesResponse.toByteArray();
                         network.sendMessage(destination, 4, dataToSend);
 
-                        //If an existing entry conflcits with a new one(same index but different terms), delete the existing entry and all that follow it
+                        //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
+
 
                         //Append any new entries not already in the log
                         List<AppendEntries.Entry> list = appendEntries.getEntriesList();
@@ -223,50 +231,59 @@ public class Node {
                             commitIndex = Math.min(appendEntries.getLeaderCommit(), appendEntries.getEntriesCount());
                         }
 
-                        //If RPC request or response contains term T > currentTerm: set currentTerm = T, convert to follower
-                        termT = appendEntries.getTerm();
-                        if (termT > currentTerm) {
-                            currentTerm = termT;
-                            return Role.FOLLOWER;
-                        }
+                        break;
+
+                    case 3: //RequestVoteResponse
+
+                        //If RPC request or response contains term T > currentTerm
+                        requestVoteResponse = RequestVoteResponse.parseFrom(data);
+                        termT = requestVoteResponse.getTerm();
 
                         break;
-                    case 3: // RequestVoteResponse
-                        break;
-                    case 4: // AppendEntriesResponse
+                    case 4: //AppendEntriesResponse
+                        //If RPC request or response contains term T > currentTerm
+                        appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
+                        termT = appendEntriesResponse.getTerm();
+
                         break;
                 }
+
+                //If RPC request or response contains term T > currentTerm: set currentTerm = T, convert to follower
+                termT = appendEntries.getTerm();
+                if (termT > currentTerm) {
+                    currentTerm = termT;
+                    return Role.FOLLOWER;
+                }
             }
+
+
+            /*
+             A server remains in follower state as long as it receives valid RPCs from a leader or candidate.
+             If a follower receives no communication over a period of time called the election timeout, then it assumes
+             there is no viable leader and begins an election to chose a new leader
+
+             */
 
             //If election timeout elapses without receiving AppendEntries RPC from current leader or granting vote to candidate: convert to candidate
             //no messages.  Compute the current time
             long currentTime = System.nanoTime();
-            if(currentTime - lastTimeSinceReceivedAppendEntriesFromLeader > electionTimeout || currentTime - lastTimeSinceReceivedRequestVoteFromCandidate > electionTimeout)
-                return Role.CANDIDATE;
-
+            if(currentTime - lastTimeSinceReceivedAppendEntriesFromLeader > electionTimeout || currentTime - lastTimeSinceGrantedVoteToCandidate > electionTimeout)
+                return Role.CANDIDATE; //begin election to chose a new leader
         }
     }
 
     public Role candidate() throws UnknownHostException, InvalidProtocolBufferException {
 
         //start election
-        currentTerm++;
+        currentTerm++; //To begin an election, a follower increments its current term and transitions to candidate state
         this.votedFor = InetAddress.getLocalHost().toString();
         resetElectionTimer();
 
         //send RequestVote RPCs to all other servers
         int tempCurrentTerm = this.currentTerm;
-        String tempCandidateId = "";
-
-        try {
-            tempCandidateId = InetAddress.getLocalHost().toString(); //who is requesting a vote
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-
-        //Index out of bounds exception 
+        String tempCandidateId = InetAddress.getLocalHost().toString(); //who is requesting a vote
         int tempLastLogIndex = log.size();
-        int tempLastLogTerm = log.get(log.size()).getTerm();
+        int tempLastLogTerm = log.get(log.size() - 1).getTerm();
 
         RequestVote vote = RequestVote.newBuilder()
                 .setTerm(tempCurrentTerm)
@@ -277,12 +294,17 @@ public class Node {
 
         byte[] dataToSend = vote.toByteArray();
 
-        //send RequestVote to all other servers
         for (String destination : listOfNodes) {
             network.sendMessage(destination, 1, dataToSend);
         }
 
         while (true) {
+
+            /*
+
+               A candidate continues in this state until one of three things happens: it wins the election, another server
+               establishes itself as leader, or a period of time goes by with no winner
+             */
 
             if (commitIndex > lastAppliedIndex) {
                 lastAppliedIndex++;
@@ -296,18 +318,79 @@ public class Node {
             RequestVote requestVote = null;
             AppendEntries appendEntries = null;
 
+            int termT = 0;
+
             switch (messageType) {
                 case 1: //RequestVote
+
+                    //While waiting for votes, a candidate may receieve an AppendEntries RPC from another server
+                    //claiming to be leader.  If the leader's term is at least as large as the candidate's current term,
+                    //then the candidate recognizes the leader as legitimate and returns to follower state.  If the term in the RPC
+                    //is smaller than the candidate's current term, then the candidate rejects the RPC and continues in candidate state
+
                     requestVote = RequestVote.parseFrom(data);
+
+                    termT = requestVote.getTerm();
+
+
                     break;
                 case 2: //AppendEntries
                     appendEntries = AppendEntries.parseFrom(data);
 
+                    int term = appendEntries.getTerm();
+
                     //If AppendEntries RPC received from new leader: convert to follower
                     if (requestVote.getCandidateId().equals(leaderId))
                         return Role.FOLLOWER;
+
+                    AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
+                    String destination = appendEntries.getLeaderId();
+
+                    //reply false if term < currentTerm
+                    if (term < currentTerm) {
+                        appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
+                    }
+
+                    //Reply false if log doesn't contain an entry at prevLogIndex whose term matches prevLogTerm
+                    if (!(log.get(appendEntries.getPrevLogIndex()).getTerm() == appendEntries.getPrevLogTerm())) {
+                        appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
+                    }
+
+                    dataToSend = appendEntriesResponse.toByteArray();
+                    network.sendMessage(destination, 4, dataToSend);
+
+                    //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
+
+                    //Append any new entries not already in the log
+                    List<AppendEntries.Entry> list = appendEntries.getEntriesList();
+                    for(int i = 0; i < list.size(); i++) {
+                        AppendEntries.Entry tempEntry = list.get(i);
+                        String tempMessage = tempEntry.getMessage();
+
+                        if(!(log.get(i).containsCommand(tempMessage))) { //entry not in the log
+                            LogEntry logToAdd = new LogEntry();
+                            logToAdd.setTerm(currentTerm);
+                            logToAdd.setCommands(null);
+                            append(logToAdd);
+                        }
+                    }
+
+                    //If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry
+                    if (appendEntries.getLeaderCommit() > this.commitIndex) {
+                        commitIndex = Math.min(appendEntries.getLeaderCommit(), appendEntries.getEntriesCount());
+                    }
+
                     break;
                 case 3: //RequestVoteResponse
+
+                    RequestVoteResponse requestVoteResponse = RequestVoteResponse.parseFrom(data);
+
+                    boolean gotAVote = requestVoteResponse.getVoteGranted();
+
+                    if(gotAVote)
+                        votesReceivedCount++;
+
+
                     break;
                 case 4: //AppendEntriesResponse
 
@@ -319,7 +402,7 @@ public class Node {
             }
 
             //if RPC request or response contains term T > currentTerm: set currentTerm = t, convert to follower
-            int termT = requestVote.getTerm();
+
             if (termT > currentTerm) {
                 currentTerm = termT;
                 return Role.FOLLOWER; //convert to follower
