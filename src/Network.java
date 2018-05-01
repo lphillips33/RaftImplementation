@@ -1,4 +1,6 @@
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.reber.raft.AppendEntriesProtos;
+import com.reber.raft.AppendEntriesResponseProtos;
 import com.reber.raft.RequestVoteProtos;
 import com.reber.raft.RequestVoteResponseProtos;
 
@@ -42,7 +44,7 @@ public class Network {
 
                 out.write(type);
                 out.write(data.length);
-                out.write(data);
+                out.write(data, 0, data.length);
 
             } catch(IOException e) {
                 System.err.println("Could not establish connection to " + destination + " on port 6666");
@@ -90,12 +92,34 @@ public class Network {
                 byte[] payload = new byte[length];
                 in.readFully(payload);
 
+                printMessage(type, payload);
+
                 node.newMessage(type, payload);
                 socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+
+        void printMessage(int type, byte[] payload) throws InvalidProtocolBufferException {
+            switch (type) {
+                case 1:
+                    RequestVoteProtos.RequestVote requestVote = RequestVoteProtos.RequestVote.parseFrom(payload);
+                    System.out.println("RECEIVED THE FOLLOWING " + requestVote.toString());
+                case 2:
+                    AppendEntriesProtos.AppendEntries appendEntries = AppendEntriesProtos.AppendEntries.parseFrom(payload);
+                    System.out.println("RECEIVED THE FOLLOWING " + appendEntries.toString());
+                case 3:
+                    RequestVoteResponseProtos.RequestVoteResponse requestVoteResponse =  RequestVoteResponseProtos.RequestVoteResponse .parseFrom(payload);
+                    System.out.println("RECEIVED THE FOLLOWING " + requestVoteResponse.toString());
+                case 4:
+                    AppendEntriesResponseProtos.AppendEntriesResponse appendEntriesResponse = AppendEntriesResponseProtos.AppendEntriesResponse.parseFrom(payload);
+                    System.out.println("RECEIVED THE FOLLOWING " + appendEntriesResponse.toString());
+            }
+        }
+
+
+
     }
 
 }

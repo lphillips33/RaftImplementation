@@ -178,6 +178,8 @@ public class Node {
                         }
 
                         byte[] dataToSend = requestVoteResponse.toByteArray();
+
+                        System.out.println("Sending message to " + destination);
                         network.sendMessage(destination, 3, dataToSend);
 
                         termT = requestVote.getTerm();
@@ -207,6 +209,7 @@ public class Node {
                         }
 
                         dataToSend = appendEntriesResponse.toByteArray();
+                        System.out.println("Going to send to " + destination);
                         network.sendMessage(destination, 4, dataToSend);
 
                         //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
