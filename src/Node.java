@@ -323,7 +323,7 @@ public class Node {
 
             int termT = 0;
 
-            if (!messages.isEmpty()) {
+            if (messages!= null && !messages.isEmpty()) { //messages != null fixed null pointer exception 
 
                 MessageWrapper message = messages.poll();
                 int messageType = message.getMessageType();
