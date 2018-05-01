@@ -86,7 +86,7 @@ public class Node {
         long lastTimeReceivedMessageFromClient = 0;
 
         //upon election: send initial empty AppendEntries RPCs (heartbeat) to each server; repeat during idle periods to prevent election timeouts
-        AppendEntries appendEntriesHeartbeat = AppendEntries.newBuilder().addEntries(AppendEntries.Entry.newBuilder().setTermNumber(this.currentTerm).setMessage(null)).build();
+        AppendEntries appendEntriesHeartbeat = AppendEntries.newBuilder().addEntries(AppendEntries.Entry.newBuilder().setTermNumber(this.currentTerm).setMessage("")).build();
 
         byte[] dataToSend = appendEntriesHeartbeat.toByteArray();
 
@@ -323,7 +323,7 @@ public class Node {
 
             int termT = 0;
 
-            if (messages!= null && !messages.isEmpty()) { //messages != null fixed null pointer exception 
+            if (messages!= null && !messages.isEmpty()) { //messages != null fixed null pointer exception
 
                 MessageWrapper message = messages.poll();
                 int messageType = message.getMessageType();
