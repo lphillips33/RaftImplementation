@@ -103,7 +103,7 @@ public class Node {
                 //apply(log.get(lastAppliedIndex));
             }
 
-            if (!(messages.isEmpty())) {
+            if (messages != null && !messages.isEmpty()) {
                 MessageWrapper message = messages.poll();
                 lastTimeReceivedMessageFromClient = System.nanoTime();
                 int messageType = message.getMessageType();
