@@ -62,6 +62,8 @@ public class Node {
         network = new Network(this); //want this after all of the instance data is declared.
         this.listOfNodes = network.loadNodes();
         numberOfNodes = this.listOfNodes.size();
+
+        this.network.listen(6666);
     }
 
     public void run() throws UnknownHostException, InvalidProtocolBufferException {
