@@ -45,7 +45,7 @@ public class Node {
         this.currentTerm = 0;
         this.votedFor = "0";
         this.log = new ArrayList<LogEntry>();
-        this.commitIndex = 0;
+        this.commitIndex = -1; //we start at 0, the book starts at 1
         this.lastAppliedIndex = 0;
         this.nextIndex = null;
         this.matchIndex = null;
@@ -103,7 +103,7 @@ public class Node {
                 //apply(log.get(lastAppliedIndex));
             }
 
-            if (!(messages.isEmpty())){
+            if (!(messages.isEmpty())) {
                 MessageWrapper message = messages.poll();
                 lastTimeReceivedMessageFromClient = System.nanoTime();
                 int messageType = message.getMessageType();
@@ -122,7 +122,7 @@ public class Node {
 
             //Leaders send periodic heartbeats(AppendEntries RPCs that carry no log entries) to all followers to maintain their authority
             //We haven't received a message in over a second
-            if((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
+            if ((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
                 for (String destination : listOfNodes) {
                     network.sendMessage(destination, 2, dataToSend);
                 }
@@ -146,7 +146,7 @@ public class Node {
             }
 
             //if (!messages.isEmpty()) {
-            if(messages != null && !messages.isEmpty()) {
+            if (messages != null && !messages.isEmpty()) {
                 MessageWrapper message = messages.poll();
                 int messageType = message.getMessageType();
                 byte[] data = message.getData();
@@ -214,11 +214,11 @@ public class Node {
 
                         //Append any new entries not already in the log
                         List<AppendEntries.Entry> list = appendEntries.getEntriesList();
-                        for(int i = 0; i < list.size(); i++) {
+                        for (int i = 0; i < list.size(); i++) {
                             AppendEntries.Entry tempEntry = list.get(i);
                             String tempMessage = tempEntry.getMessage();
 
-                            if(!(log.get(i).containsCommand(tempMessage))) { //entry not in the log
+                            if (!(log.get(i).containsCommand(tempMessage))) { //entry not in the log
                                 LogEntry logToAdd = new LogEntry();
                                 logToAdd.setTerm(currentTerm);
                                 logToAdd.setCommands(null);
@@ -267,7 +267,7 @@ public class Node {
             //If election timeout elapses without receiving AppendEntries RPC from current leader or granting vote to candidate: convert to candidate
             //no messages.  Compute the current time
             long currentTime = System.nanoTime();
-            if(currentTime - lastTimeSinceReceivedAppendEntriesFromLeader > electionTimeout || currentTime - lastTimeSinceGrantedVoteToCandidate > electionTimeout)
+            if (currentTime - lastTimeSinceReceivedAppendEntriesFromLeader > electionTimeout || currentTime - lastTimeSinceGrantedVoteToCandidate > electionTimeout)
                 return Role.CANDIDATE; //begin election to chose a new leader
         }
     }
@@ -282,8 +282,18 @@ public class Node {
         //send RequestVote RPCs to all other servers
         int tempCurrentTerm = this.currentTerm;
         String tempCandidateId = InetAddress.getLocalHost().toString(); //who is requesting a vote
-        int tempLastLogIndex = log.size();
-        int tempLastLogTerm = log.get(log.size() - 1).getTerm();
+
+
+        int tempLastLogIndex = 0;
+        int tempLastLogTerm = 0;
+
+        if (log.isEmpty()) {
+            tempLastLogIndex = -1;
+            tempLastLogTerm = 0;
+        } else {
+            tempLastLogIndex = log.size();
+            tempLastLogTerm = log.get(log.size() - 1).getTerm();
+        }
 
         RequestVote vote = RequestVote.newBuilder()
                 .setTerm(tempCurrentTerm)
@@ -311,90 +321,94 @@ public class Node {
                 //apply(log.get(lastAppliedIndex));
             }
 
-            MessageWrapper message = messages.poll();
-            int messageType = message.getMessageType();
-            byte[] data = message.getData();
-
-            RequestVote requestVote = null;
-            AppendEntries appendEntries = null;
-
             int termT = 0;
 
-            switch (messageType) {
-                case 1: //RequestVote
+            if (!messages.isEmpty()) {
 
-                    //While waiting for votes, a candidate may receieve an AppendEntries RPC from another server
-                    //claiming to be leader.  If the leader's term is at least as large as the candidate's current term,
-                    //then the candidate recognizes the leader as legitimate and returns to follower state.  If the term in the RPC
-                    //is smaller than the candidate's current term, then the candidate rejects the RPC and continues in candidate state
+                MessageWrapper message = messages.poll();
+                int messageType = message.getMessageType();
+                byte[] data = message.getData();
 
-                    requestVote = RequestVote.parseFrom(data);
+                RequestVote requestVote = null;
+                AppendEntries appendEntries = null;
 
-                    termT = requestVote.getTerm();
+                switch (messageType) {
+                    case 1: //RequestVote
 
+                        //While waiting for votes, a candidate may receieve an AppendEntries RPC from another server
+                        //claiming to be leader.  If the leader's term is at least as large as the candidate's current term,
+                        //then the candidate recognizes the leader as legitimate and returns to follower state.  If the term in the RPC
+                        //is smaller than the candidate's current term, then the candidate rejects the RPC and continues in candidate state
 
-                    break;
-                case 2: //AppendEntries
-                    appendEntries = AppendEntries.parseFrom(data);
+                        requestVote = RequestVote.parseFrom(data);
 
-                    int term = appendEntries.getTerm();
+                        termT = requestVote.getTerm();
 
-                    //If AppendEntries RPC received from new leader: convert to follower
-                    if (requestVote.getCandidateId().equals(leaderId))
-                        return Role.FOLLOWER;
+                        break;
+                    case 2: //AppendEntries
+                        appendEntries = AppendEntries.parseFrom(data);
 
-                    AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
-                    String destination = appendEntries.getLeaderId();
+                        int term = appendEntries.getTerm();
 
-                    //reply false if term < currentTerm
-                    if (term < currentTerm) {
-                        appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
-                    }
+                        //If AppendEntries RPC received from new leader: convert to follower
+                        if (requestVote.getCandidateId().equals(leaderId))
+                            return Role.FOLLOWER;
 
-                    //Reply false if log doesn't contain an entry at prevLogIndex whose term matches prevLogTerm
-                    if (!(log.get(appendEntries.getPrevLogIndex()).getTerm() == appendEntries.getPrevLogTerm())) {
-                        appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
-                    }
+                        AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
+                        String destination = appendEntries.getLeaderId();
 
-                    dataToSend = appendEntriesResponse.toByteArray();
-                    network.sendMessage(destination, 4, dataToSend);
-
-                    //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
-
-                    //Append any new entries not already in the log
-                    List<AppendEntries.Entry> list = appendEntries.getEntriesList();
-                    for(int i = 0; i < list.size(); i++) {
-                        AppendEntries.Entry tempEntry = list.get(i);
-                        String tempMessage = tempEntry.getMessage();
-
-                        if(!(log.get(i).containsCommand(tempMessage))) { //entry not in the log
-                            LogEntry logToAdd = new LogEntry();
-                            logToAdd.setTerm(currentTerm);
-                            logToAdd.setCommands(null);
-                            append(logToAdd);
+                        //reply false if term < currentTerm
+                        if (term < currentTerm) {
+                            appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
                         }
-                    }
 
-                    //If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry
-                    if (appendEntries.getLeaderCommit() > this.commitIndex) {
-                        commitIndex = Math.min(appendEntries.getLeaderCommit(), appendEntries.getEntriesCount());
-                    }
+                        //Reply false if log doesn't contain an entry at prevLogIndex whose term matches prevLogTerm
+                        if (!(log.get(appendEntries.getPrevLogIndex()).getTerm() == appendEntries.getPrevLogTerm())) {
+                            appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
+                        }
 
-                    break;
-                case 3: //RequestVoteResponse
+                        dataToSend = appendEntriesResponse.toByteArray();
+                        network.sendMessage(destination, 4, dataToSend);
 
-                    RequestVoteResponse requestVoteResponse = RequestVoteResponse.parseFrom(data);
+                        //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
 
-                    boolean gotAVote = requestVoteResponse.getVoteGranted();
+                        //Append any new entries not already in the log
+                        List<AppendEntries.Entry> list = appendEntries.getEntriesList();
+                        for (int i = 0; i < list.size(); i++) {
+                            AppendEntries.Entry tempEntry = list.get(i);
+                            String tempMessage = tempEntry.getMessage();
 
-                    if(gotAVote)
-                        votesReceivedCount++;
+                            if (!(log.get(i).containsCommand(tempMessage))) { //entry not in the log
+                                LogEntry logToAdd = new LogEntry();
+                                logToAdd.setTerm(currentTerm);
+                                logToAdd.setCommands(null);
+                                append(logToAdd);
+                            }
+                        }
+
+                        //If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry
+                        if (appendEntries.getLeaderCommit() > this.commitIndex) {
+                            commitIndex = Math.min(appendEntries.getLeaderCommit(), appendEntries.getEntriesCount());
+                        }
+
+                        break;
+                    case 3: //RequestVoteResponse
+
+                        RequestVoteResponse requestVoteResponse = RequestVoteResponse.parseFrom(data);
+
+                        boolean gotAVote = requestVoteResponse.getVoteGranted();
+
+                        if (gotAVote)
+                            votesReceivedCount++;
 
 
-                    break;
-                case 4: //AppendEntriesResponse
+                        break;
+                    case 4: //AppendEntriesResponse
+
+                }
 
             }
+
 
             //If votes received from majority servers: become leader
             if (this.votesReceivedCount >= Math.ceil(numberOfNodes / 2)) {
@@ -402,7 +416,6 @@ public class Node {
             }
 
             //if RPC request or response contains term T > currentTerm: set currentTerm = t, convert to follower
-
             if (termT > currentTerm) {
                 currentTerm = termT;
                 return Role.FOLLOWER; //convert to follower
