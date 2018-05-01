@@ -303,9 +303,50 @@ public class Node {
                 case 2: //AppendEntries
                     appendEntries = AppendEntries.parseFrom(data);
 
+                    int term = appendEntries.getTerm();
+
                     //If AppendEntries RPC received from new leader: convert to follower
                     if (requestVote.getCandidateId().equals(leaderId))
                         return Role.FOLLOWER;
+
+
+                    AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
+                    String destination = appendEntries.getLeaderId();
+
+                    //reply false if term < currentTerm
+                    if (term < currentTerm) {
+                        appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
+                    }
+
+                    //Reply false if log doesn't contain an entry at prevLogIndex whose term matches prevLogTerm
+                    if (!(log.get(appendEntries.getPrevLogIndex()).getTerm() == appendEntries.getPrevLogTerm())) {
+                        appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
+                    }
+
+                    dataToSend = appendEntriesResponse.toByteArray();
+                    network.sendMessage(destination, 4, dataToSend);
+
+                    //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
+
+                    //Append any new entries not already in the log
+                    List<AppendEntries.Entry> list = appendEntries.getEntriesList();
+                    for(int i = 0; i < list.size(); i++) {
+                        AppendEntries.Entry tempEntry = list.get(i);
+                        String tempMessage = tempEntry.getMessage();
+
+                        if(!(log.get(i).containsCommand(tempMessage))) { //entry not in the log
+                            LogEntry logToAdd = new LogEntry();
+                            logToAdd.setTerm(currentTerm);
+                            logToAdd.setCommands(null);
+                            append(logToAdd);
+                        }
+                    }
+
+                    //If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry
+                    if (appendEntries.getLeaderCommit() > this.commitIndex) {
+                        commitIndex = Math.min(appendEntries.getLeaderCommit(), appendEntries.getEntriesCount());
+                    }
+
                     break;
                 case 3: //RequestVoteResponse
                     break;
