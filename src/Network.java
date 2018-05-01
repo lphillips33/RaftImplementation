@@ -33,8 +33,10 @@ public class Network {
         return nodes;
     }
     //1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
-    public void sendMessage(String destination, int type, byte[] data) {
+    public void sendMessage(String destination, int type, byte[] data) throws  InvalidProtocolBufferException {
         //send destination, then type, then size, then data
+
+        printMessage(type, data);
 
         new Thread(() -> {
             try(Socket socket = new Socket(destination, 6666);
@@ -53,6 +55,25 @@ public class Network {
             }
         }).start();
     }
+
+
+    void printMessage(int type, byte[] payload) throws InvalidProtocolBufferException {
+        switch (type) {
+            case 1:
+                RequestVoteProtos.RequestVote requestVote = RequestVoteProtos.RequestVote.parseFrom(payload);
+                System.out.println("RECEIVED THE FOLLOWING " + requestVote.toString());
+            case 2:
+                AppendEntriesProtos.AppendEntries appendEntries = AppendEntriesProtos.AppendEntries.parseFrom(payload);
+                System.out.println("RECEIVED THE FOLLOWING " + appendEntries.toString());
+            case 3:
+                RequestVoteResponseProtos.RequestVoteResponse requestVoteResponse =  RequestVoteResponseProtos.RequestVoteResponse .parseFrom(payload);
+                System.out.println("RECEIVED THE FOLLOWING " + requestVoteResponse.toString());
+            case 4:
+                AppendEntriesResponseProtos.AppendEntriesResponse appendEntriesResponse = AppendEntriesResponseProtos.AppendEntriesResponse.parseFrom(payload);
+                System.out.println("RECEIVED THE FOLLOWING " + appendEntriesResponse.toString());
+        }
+    }
+
 
     // 1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
     public void listen(int portNumber) throws IOException {

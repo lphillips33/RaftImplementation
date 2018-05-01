@@ -93,6 +93,7 @@ public class Node {
         //Once a candidate wins an election, it becomes leader.  It then sends
         //heartbeat messages to all of the other servers to establish its authority and prevent new elections
         for (String destination : listOfNodes) {
+            System.out.println("Sending heartbeat to " + destination);
             network.sendMessage(destination, 2, dataToSend);
         }
 
@@ -124,6 +125,7 @@ public class Node {
             //We haven't received a message in over a second
             if ((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
                 for (String destination : listOfNodes) {
+                    System.out.println("Sending message to " + destination);
                     network.sendMessage(destination, 2, dataToSend);
                 }
             }
@@ -371,6 +373,7 @@ public class Node {
                         }
 
                         dataToSend = appendEntriesResponse.toByteArray();
+                        System.out.println("Sending message to " + destination);
                         network.sendMessage(destination, 4, dataToSend);
 
                         //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
