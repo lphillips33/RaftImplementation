@@ -54,7 +54,8 @@ public class Node {
 
 
         try {
-            this.nodeId = InetAddress.getLocalHost().toString();
+            String fullIP = InetAddress.getLocalHost().toString();
+            this.nodeId = fullIP.substring(fullIP.lastIndexOf("/") + 1);
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -93,6 +94,7 @@ public class Node {
         //Once a candidate wins an election, it becomes leader.  It then sends
         //heartbeat messages to all of the other servers to establish its authority and prevent new elections
         for (String destination : listOfNodes) {
+            System.out.println("Sending heartbeat to " + destination);
             network.sendMessage(destination, 2, dataToSend);
         }
 
@@ -124,6 +126,7 @@ public class Node {
             //We haven't received a message in over a second
             if ((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
                 for (String destination : listOfNodes) {
+                    System.out.println("Sending message to " + destination);
                     network.sendMessage(destination, 2, dataToSend);
                 }
             }
@@ -160,7 +163,8 @@ public class Node {
                         requestVote = RequestVote.parseFrom(data);
                         int term = requestVote.getTerm();
 
-                        String destination = requestVote.getCandidateId();
+                        //String destination =  requestVote.getCandidateId();
+                        String destination = requestVote.getCandidateId().substring(requestVote.getCandidateId().lastIndexOf("/") + 1);
 
                         RequestVoteResponse requestVoteResponse = null; //respond to the candidate
 
@@ -173,7 +177,9 @@ public class Node {
                         //receiver's log, grant vote.  not sure about the part after &&
                         if ((this.votedFor == null || votedFor.equals(requestVote.getCandidateId())) && requestVote.getLastLogIndex() >= this.lastAppliedIndex) {
                             requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(term).setVoteGranted(true).build();
-                            this.votedFor = requestVote.getCandidateId();
+                            //this.votedFor = requestVote.getCandidateId();
+                            this.votedFor = requestVote.getCandidateId().substring(requestVote.getCandidateId().lastIndexOf("/") + 1);
+
                             lastTimeSinceGrantedVoteToCandidate = System.nanoTime();
                         }
 
@@ -196,7 +202,8 @@ public class Node {
 
                         AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
 
-                        destination = appendEntries.getLeaderId();
+                        destination = appendEntries.getLeaderId().substring(appendEntries.getLeaderId().lastIndexOf("/") + 1);
+                        //destination = appendEntries.getLeaderId();
 
                         //reply false if term < currentTerm
                         if (term < currentTerm) {
@@ -284,8 +291,8 @@ public class Node {
 
         //send RequestVote RPCs to all other servers
         int tempCurrentTerm = this.currentTerm;
-        String tempCandidateId = InetAddress.getLocalHost().toString(); //who is requesting a vote
-
+        //String tempCandidateId = InetAddress.getLocalHost().toString(); //who is requesting a vote
+        String tempCandidateId = InetAddress.getLocalHost().toString().substring(InetAddress.getLocalHost().toString().lastIndexOf("/") + 1);
 
         int tempLastLogIndex = 0;
         int tempLastLogTerm = 0;
@@ -371,6 +378,7 @@ public class Node {
                         }
 
                         dataToSend = appendEntriesResponse.toByteArray();
+                        System.out.println("Sending message to " + destination);
                         network.sendMessage(destination, 4, dataToSend);
 
                         //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
