@@ -51,7 +51,6 @@ public class Network {
             } catch(IOException e) {
                 System.err.println("Could not establish connection to " + destination + " on port 6666");
                 e.printStackTrace();
-                System.exit(1);
             }
         }).start();
     }
