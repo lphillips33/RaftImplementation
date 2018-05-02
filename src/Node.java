@@ -122,6 +122,7 @@ public class Node {
                 lastTimeReceivedMessageFromClient = 0;
             }
 
+
             //Leaders send periodic heartbeats(AppendEntries RPCs that carry no log entries) to all followers to maintain their authority
             //We haven't received a message in over a second
             if ((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
@@ -130,6 +131,7 @@ public class Node {
                     network.sendMessage(destination, 2, dataToSend);
                 }
             }
+
         }
     }
 
