@@ -86,7 +86,7 @@ public class Network {
         Thread t = new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(portNumber)) {
                 while (listening) {
-                    System.out.println("Listening for conenctions");
+                    System.out.println("Listening for connections");
                     new RaftNetThread(serverSocket.accept(), node).start();
                 }
             } catch (IOException e) {
@@ -115,7 +115,9 @@ public class Network {
                 int length = in.readInt();
 
                 byte[] payload = new byte[length];
-                in.readFully(payload);
+
+                //in.readFully(payload);
+                in.read(payload, 0, length);
 
                 printMessage(type, payload);
 
