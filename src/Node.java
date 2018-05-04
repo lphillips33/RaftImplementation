@@ -425,6 +425,7 @@ public class Node {
 
             //If votes received from majority servers: become leader
             if (this.votesReceivedCount >= Math.ceil(numberOfNodes / 2)) {
+                System.out.println("I HAVE BEEN ELECTED LEADER");
                 return Role.LEADER;
             }
 
@@ -444,11 +445,7 @@ public class Node {
     //receive a message from network class
     public void newMessage(int type, byte[] data) throws InvalidProtocolBufferException {
         MessageWrapper wrapper = new MessageWrapper(type, data);
-
-        if(data != null) {
-            messages.add(wrapper);
-        }
-       
+        messages.add(wrapper);
     }
 
     //compute random election timeout between 150ms and 350 ms.  150000000, 350000000 are passed in as parameters
