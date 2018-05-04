@@ -444,7 +444,11 @@ public class Node {
     //receive a message from network class
     public void newMessage(int type, byte[] data) throws InvalidProtocolBufferException {
         MessageWrapper wrapper = new MessageWrapper(type, data);
-        messages.add(wrapper);
+
+        if(data != null) {
+            messages.add(wrapper);
+        }
+       
     }
 
     //compute random election timeout between 150ms and 350 ms.  150000000, 350000000 are passed in as parameters
