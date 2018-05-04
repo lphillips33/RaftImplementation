@@ -94,7 +94,7 @@ public class Node {
         //Once a candidate wins an election, it becomes leader.  It then sends
         //heartbeat messages to all of the other servers to establish its authority and prevent new elections
         for (String destination : listOfNodes) {
-            System.out.println("Sending heartbeat to " + destination);
+            System.out.println("I AM A LEADER: SENDING HEARTBEAT TO ALL OTHER SERVERS " + destination);
             network.sendMessage(destination, 2, dataToSend);
         }
 
@@ -127,7 +127,7 @@ public class Node {
             //We haven't received a message in over a second
             if ((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
                 for (String destination : listOfNodes) {
-                    System.out.println("Sending message to " + destination);
+                    System.out.println("I AM A LEADER: SENDING HEARTBEATS TO ALL FOLLOWERS " + destination);
                     network.sendMessage(destination, 2, dataToSend);
                 }
             }
@@ -187,7 +187,7 @@ public class Node {
 
                         byte[] dataToSend = requestVoteResponse.toByteArray();
 
-                        System.out.println("Sending message to " + destination);
+                        System.out.println("I am a follower: Sending RequestVote " + destination);
                         network.sendMessage(destination, 3, dataToSend);
 
                         termT = requestVote.getTerm();
@@ -218,7 +218,7 @@ public class Node {
                         }
 
                         dataToSend = appendEntriesResponse.toByteArray();
-                        System.out.println("Going to send to " + destination);
+                        System.out.println("I am a follower: Sending AppendEntries " + destination);
                         network.sendMessage(destination, 4, dataToSend);
 
                         //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
@@ -250,13 +250,14 @@ public class Node {
                         //If RPC request or response contains term T > currentTerm
                         requestVoteResponse = RequestVoteResponse.parseFrom(data);
                         termT = requestVoteResponse.getTerm();
+                        System.out.println("I am a follower, I got a RequestVoteResponse");
 
                         break;
                     case 4: //AppendEntriesResponse
                         //If RPC request or response contains term T > currentTerm
                         appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
                         termT = appendEntriesResponse.getTerm();
-
+                        System.out.println("I am a follower, got a AppendEntriesResponse");
                         break;
                 }
 
@@ -356,6 +357,8 @@ public class Node {
 
                         termT = requestVote.getTerm();
 
+
+                        System.out.println("I am a candidate received REQUESTVOTE from  " + requestVote.getCandidateId());
                         break;
                     case 2: //AppendEntries
                         appendEntries = AppendEntries.parseFrom(data);
@@ -380,7 +383,7 @@ public class Node {
                         }
 
                         dataToSend = appendEntriesResponse.toByteArray();
-                        System.out.println("Sending message to " + destination);
+                        System.out.println("I am a candidate: sending APPEND ENTRIES to " + destination);
                         network.sendMessage(destination, 4, dataToSend);
 
                         //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
@@ -411,12 +414,15 @@ public class Node {
 
                         boolean gotAVote = requestVoteResponse.getVoteGranted();
 
+                        System.out.println("I am a candidate: " + " RECEIVED REQUESTVOTERESPONSE");
                         if (gotAVote)
                             votesReceivedCount++;
 
 
                         break;
                     case 4: //AppendEntriesResponse
+                        System.out.println("I am a candidate: " + " RECEIVED APPENDENTRIESRESPONSE");
+                        break;
 
                 }
 
@@ -445,6 +451,7 @@ public class Node {
     //receive a message from network class
     public void newMessage(int type, byte[] data) throws InvalidProtocolBufferException {
         MessageWrapper wrapper = new MessageWrapper(type, data);
+        System.out.println("ADDING MESSAGE TO QUEUE");
         messages.add(wrapper);
     }
 
