@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Queue;
+import java.util.LinkedList;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.reber.raft.AppendEntriesProtos.AppendEntries;
@@ -65,6 +67,8 @@ public class Node {
         numberOfNodes = this.listOfNodes.size();
 
         this.network.listen(6666);
+
+        messages = new ConcurrentLinkedQueue<MessageWrapper>();
     }
 
     public void run() throws UnknownHostException, InvalidProtocolBufferException {
