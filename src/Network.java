@@ -62,18 +62,22 @@ public class Network {
                 RequestVoteProtos.RequestVote requestVote = RequestVoteProtos.RequestVote.parseFrom(payload);
                 System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  " REQUESTVOTE");
                 System.out.println(requestVote.toString());
+                break;
             case 2:
                 AppendEntriesProtos.AppendEntries appendEntries = AppendEntriesProtos.AppendEntries.parseFrom(payload);
                 System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  " APPEND ENTRIES");
                 System.out.println(appendEntries.toString());
+                break;
             case 3:
                 RequestVoteResponseProtos.RequestVoteResponse requestVoteResponse =  RequestVoteResponseProtos.RequestVoteResponse .parseFrom(payload);
                 System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  " REQUESTVOTERESPONSE");
                 System.out.println(requestVoteResponse.toString());
+                break;
             case 4:
                 AppendEntriesResponseProtos.AppendEntriesResponse appendEntriesResponse = AppendEntriesResponseProtos.AppendEntriesResponse.parseFrom(payload);
                 System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  " APPENDENTRIESRESPONSE");
                 System.out.println(appendEntriesResponse.toString());
+                break;
         }
     }
 
@@ -132,20 +136,24 @@ public class Network {
             switch (type) {
                 case 1:
                     RequestVoteProtos.RequestVote requestVote = RequestVoteProtos.RequestVote.parseFrom(payload);
-                    System.out.println("RECEIVED THE FOLLOWING OF TYPE: " + " REQUESTVOTE");
+                    System.out.println("CONNECTION ESTABLISHED: RECEIVED THE FOLLOWING OF TYPE: " + " REQUESTVOTE");
                     System.out.println(requestVote.toString());
+                    break;
                 case 2:
                     AppendEntriesProtos.AppendEntries appendEntries = AppendEntriesProtos.AppendEntries.parseFrom(payload);
-                    System.out.println("RECEIVED THE FOLLOWING OF TYPE: " +  "APPEND ENTRIES");
+                    System.out.println("CONNECTION ESTABLISHED: RECEIVED THE FOLLOWING OF TYPE: " +  "APPEND ENTRIES");
                     System.out.println(appendEntries.toString());
+                    break;
                 case 3:
                     RequestVoteResponseProtos.RequestVoteResponse requestVoteResponse =  RequestVoteResponseProtos.RequestVoteResponse .parseFrom(payload);
-                    System.out.println("RECEIVED THE FOLLOWING OF TYPE: " + " REQUESTVOTERESPONSE");
+                    System.out.println("CONNECTION ESTABLISHED: RECEIVED THE FOLLOWING OF TYPE: " + " REQUESTVOTERESPONSE");
                     System.out.println(requestVoteResponse.toString());
+                    break;
                 case 4:
                     AppendEntriesResponseProtos.AppendEntriesResponse appendEntriesResponse = AppendEntriesResponseProtos.AppendEntriesResponse.parseFrom(payload);
-                    System.out.println("RECEIVED THE FOLLOWING OF TYPE: " + " APPENDENTRIESRESPONSE");
+                    System.out.println("CONNECTION ESTABLISHED: RECEIVED THE FOLLOWING OF TYPE: " + " APPENDENTRIESRESPONSE");
                     System.out.println(appendEntriesResponse.toString());
+                    break;
             }
         }
 
