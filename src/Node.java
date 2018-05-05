@@ -293,7 +293,7 @@ public class Node {
 
         //start election
         currentTerm++; //To begin an election, a follower increments its current term and transitions to candidate state
-        this.votedFor = InetAddress.getLocalHost().toString();
+        this.votedFor = InetAddress.getLocalHost().toString().substring(InetAddress.getLocalHost().toString().lastIndexOf("/" + 1));
         resetElectionTimer();
 
         //send RequestVote RPCs to all other servers
