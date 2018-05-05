@@ -293,7 +293,7 @@ public class Node {
 
         //start election
         currentTerm++; //To begin an election, a follower increments its current term and transitions to candidate state
-        this.votedFor = InetAddress.getLocalHost().toString();
+        this.votedFor = InetAddress.getLocalHost().toString().substring(InetAddress.getLocalHost().toString().lastIndexOf("/" + 1));
         resetElectionTimer();
 
         //send RequestVote RPCs to all other servers
@@ -387,7 +387,7 @@ public class Node {
                         }
 
                         dataToSend = appendEntriesResponse.toByteArray();
-                        System.out.println("I am a candidate: sending APPEND ENTRIES to " + destination);
+                        System.out.println("I am a candidate: sending APPEND-ENTRIES-RESPONSE to " + destination);
                         network.sendMessage(destination, 4, dataToSend);
 
                         //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
@@ -413,19 +413,18 @@ public class Node {
 
                         break;
                     case 3: //RequestVoteResponse
+                        System.out.println("I am a candidate: " + " RECEIVED REQUEST-VOTE-RESPONSE");
 
                         RequestVoteResponse requestVoteResponse = RequestVoteResponse.parseFrom(data);
 
                         boolean gotAVote = requestVoteResponse.getVoteGranted();
 
-                        System.out.println("I am a candidate: " + " RECEIVED REQUESTVOTERESPONSE");
                         if (gotAVote)
                             votesReceivedCount++;
 
-
                         break;
                     case 4: //AppendEntriesResponse
-                        System.out.println("I am a candidate: " + " RECEIVED APPENDENTRIESRESPONSE");
+                        System.out.println("I am a candidate: " + " RECEIVED APPEND-ENTRIES-RESPONSE");
                         break;
 
                 }

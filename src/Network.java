@@ -46,7 +46,7 @@ public class Network {
                 System.out.println("IN NETWORK CLASS: SENDING MESSAGE TO " + destination);
                 out.writeInt(type);
                 System.out.println("(NETWORK) SENT TYPE: " + type);
-                out.writeIntWhereItTravelsSafelyWithoutBeingInterceptedByRuskies(data.length);
+                out.writeInt(data.length);
                 out.write(data, 0, data.length);
 
             } catch(IOException e) {
