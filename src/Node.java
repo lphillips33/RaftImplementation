@@ -387,7 +387,7 @@ public class Node {
                         }
 
                         dataToSend = appendEntriesResponse.toByteArray();
-                        System.out.println("I am a candidate: sending APPEND ENTRIES to " + destination);
+                        System.out.println("I am a candidate: sending APPEND-ENTRIES-RESPONSE to " + destination);
                         network.sendMessage(destination, 4, dataToSend);
 
                         //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
@@ -413,19 +413,18 @@ public class Node {
 
                         break;
                     case 3: //RequestVoteResponse
+                        System.out.println("I am a candidate: " + " RECEIVED REQUEST-VOTE-RESPONSE");
 
                         RequestVoteResponse requestVoteResponse = RequestVoteResponse.parseFrom(data);
 
                         boolean gotAVote = requestVoteResponse.getVoteGranted();
 
-                        System.out.println("I am a candidate: " + " RECEIVED REQUESTVOTERESPONSE");
                         if (gotAVote)
                             votesReceivedCount++;
 
-
                         break;
                     case 4: //AppendEntriesResponse
-                        System.out.println("I am a candidate: " + " RECEIVED APPENDENTRIESRESPONSE");
+                        System.out.println("I am a candidate: " + " RECEIVED APPEND-ENTRIES-RESPONSE");
                         break;
 
                 }
@@ -455,7 +454,7 @@ public class Node {
     //receive a message from network class
     public void newMessage(int type, byte[] data) throws InvalidProtocolBufferException {
         MessageWrapper wrapper = new MessageWrapper(type, data);
-        System.out.println("ADDING MESSAGE TO QUEUE");
+        System.out.println("ADDING MESSAGE TO QUEUE OF TYPE: " + type + " BUT GOT " + wrapper.getMessageType());
         messages.add(wrapper);
     }
 
