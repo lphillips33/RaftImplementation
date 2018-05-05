@@ -43,7 +43,7 @@ public class Network {
                 DataOutputStream out =
                     new DataOutputStream(socket.getOutputStream()))
             {
-
+                System.out.println("IN NETWORK CLASS: SENDING MESSAGE TO " + destination);
                 out.write(type);
                 out.write(data.length);
                 out.write(data, 0, data.length);
