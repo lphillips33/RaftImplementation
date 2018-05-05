@@ -36,7 +36,7 @@ public class Network {
     public void sendMessage(String destination, int type, byte[] data) throws  InvalidProtocolBufferException {
         //send destination, then type, then size, then data
 
-        printMessageBeforeConnection(type, data);
+        //printMessageBeforeConnection(type, data);
 
         new Thread(() -> {
             try(Socket socket = new Socket(destination, 6666);
@@ -44,8 +44,9 @@ public class Network {
                     new DataOutputStream(socket.getOutputStream()))
             {
                 System.out.println("IN NETWORK CLASS: SENDING MESSAGE TO " + destination);
-                out.write(type);
-                out.write(data.length);
+                out.writeInt(type);
+                System.out.println("(NETWORK) SENT TYPE: " + type);
+                out.writeIntWhereItTravelsSafelyWithoutBeingInterceptedByRuskies(data.length);
                 out.write(data, 0, data.length);
 
             } catch(IOException e) {
@@ -116,6 +117,7 @@ public class Network {
                     DataInputStream in = new DataInputStream(socket.getInputStream())
             ) {
                 int type = in.readInt();
+                System.out.println("(NETWORK) READ IN TYPE: " + type);
                 int length = in.readInt();
 
                 byte[] payload = new byte[length];
