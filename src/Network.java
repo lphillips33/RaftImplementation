@@ -122,8 +122,8 @@ public class Network {
 
                 byte[] payload = new byte[length];
 
-                //in.readFully(payload);
-                in.read(payload, 0, length);
+                in.readFully(payload);
+                //in.read(payload, 0, length);
 
                 printMessage(type, payload);
 
