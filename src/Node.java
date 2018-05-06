@@ -16,6 +16,8 @@ import com.reber.raft.AppendEntriesResponseProtos.AppendEntriesResponse;
 @SuppressWarnings("Duplicates")
 public class Node {
 
+    private final long ONE_SEC = 1000000000;
+
     private Role role;
     private String nodeId;
     //start of state data
@@ -30,7 +32,7 @@ public class Node {
     Network network;
     private int votesReceivedCount; // need this for candidates method
     private static int numberOfNodes; //need this for candidates method;
-    private int electionTimeout;
+    private long electionTimeout;
     private ArrayList<String> listOfNodes;
     private long electionStart;
     private String leaderId; //current leader
@@ -51,7 +53,7 @@ public class Node {
         this.lastAppliedIndex = 0;
         this.nextIndex = null;
         this.matchIndex = null;
-        this.electionTimeout = computeElectionTimeout(350000000, 150000000);
+        this.electionTimeout = ONE_SEC + computeElectionTimeout(100_000_000, 250_000_000);
         this.leaderId = "0";
 
 
@@ -88,7 +90,6 @@ public class Node {
     }
 
     public Role leader() throws InvalidProtocolBufferException {
-        long lastTimeReceivedMessageFromClient = 0;
 
         //upon election: send initial empty AppendEntries RPCs (heartbeat) to each server; repeat during idle periods to prevent election timeouts
         AppendEntries appendEntriesHeartbeat = AppendEntries.newBuilder().addEntries(AppendEntries.Entry.newBuilder().setTermNumber(this.currentTerm).setMessage("")).build();
@@ -102,6 +103,8 @@ public class Node {
             network.sendMessage(destination, 2, dataToSend);
         }
 
+        long lastTimeHeartBeatSent = System.nanoTime(); //instead of lastTimeReceivedMessageFromClient
+
         while (true) {
 
             if (commitIndex > lastAppliedIndex) {
@@ -111,7 +114,6 @@ public class Node {
 
             if (messages != null && !messages.isEmpty()) {
                 MessageWrapper message = messages.poll();
-                lastTimeReceivedMessageFromClient = System.nanoTime();
                 int messageType = message.getMessageType();
                 byte[] data = message.getData();
 
@@ -122,20 +124,19 @@ public class Node {
                     currentTerm = termT;
                     return Role.FOLLOWER;
                 }
-
-                lastTimeReceivedMessageFromClient = 0;
             }
 
 
             //Leaders send periodic heartbeats(AppendEntries RPCs that carry no log entries) to all followers to maintain their authority
             //We haven't received a message in over a second
-            if ((System.nanoTime() - lastTimeReceivedMessageFromClient) > 1000000000) {
+            if ((System.nanoTime() - lastTimeHeartBeatSent) > 1000000000) {
                 for (String destination : listOfNodes) {
                     System.out.println("I AM A LEADER: SENDING HEARTBEATS TO ALL FOLLOWERS " + destination);
                     network.sendMessage(destination, 2, dataToSend);
                 }
             }
 
+            lastTimeHeartBeatSent = System.nanoTime();
         }
     }
 
@@ -144,8 +145,8 @@ public class Node {
         this.votedFor = null;
 
         int termT = 0;
-        long lastTimeSinceReceivedAppendEntriesFromLeader = 0;
-        long lastTimeSinceGrantedVoteToCandidate = 0;
+        long lastTimeSinceReceivedAppendEntriesFromLeader = System.nanoTime();
+        long lastTimeSinceGrantedVoteToCandidate = System.nanoTime();
         while (true) {
 
             //If commitIndex > lastApplied: increment lastApplied, apply log[lastApplied] to state machine
@@ -222,7 +223,7 @@ public class Node {
                         }
 
                         dataToSend = appendEntriesResponse.toByteArray();
-                        System.out.println("I am a follower: Sending AppendEntries " + destination);
+                        System.out.println("I am a follower: Sending APPEND-ENTRIES-RESPONSE " + destination);
                         network.sendMessage(destination, 4, dataToSend);
 
                         //If an existing entry conflicts with a new one(same index but different terms), delete the existing entry and all that follow it
@@ -325,6 +326,8 @@ public class Node {
             network.sendMessage(destination, 1, dataToSend);
         }
 
+        MessageWrapper message = null;
+
         while (true) {
 
             /*
@@ -342,7 +345,7 @@ public class Node {
 
             if (messages!= null && !messages.isEmpty()) { //messages != null fixed null pointer exception
 
-                MessageWrapper message = messages.poll();
+                message = messages.poll();
                 int messageType = message.getMessageType();
                 byte[] data = message.getData();
 
@@ -433,7 +436,7 @@ public class Node {
 
 
             //If votes received from majority servers: become leader
-            if (this.votesReceivedCount >= Math.ceil(numberOfNodes / 2)) {
+            if (this.votesReceivedCount >= Math.ceil(numberOfNodes / 2) + 1) {
                 System.out.println("I HAVE BEEN ELECTED LEADER");
                 return Role.LEADER;
             }
@@ -441,6 +444,8 @@ public class Node {
             //if RPC request or response contains term T > currentTerm: set currentTerm = t, convert to follower
             if (termT > currentTerm) {
                 currentTerm = termT;
+                // TODO push message back on the queue
+                messages.add(message);
                 return Role.FOLLOWER; //convert to follower
             }
 
