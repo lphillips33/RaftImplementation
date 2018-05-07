@@ -51,8 +51,7 @@ public class Node {
         this.log = new ArrayList<LogEntry>();
         this.commitIndex = -1; //we start at 0, the book starts at 1
         this.lastAppliedIndex = -1;
-        this.nextIndex = null;
-        this.matchIndex = null;
+
         this.electionTimeout = ONE_SEC + computeElectionTimeout(250_000_000, 100_000_000);
         this.leaderId = "0";
 
@@ -67,6 +66,9 @@ public class Node {
         network = new Network(this); //want this after all of the instance data is declared.
         this.listOfNodes = network.loadNodes();
         numberOfNodes = this.listOfNodes.size();
+
+        this.nextIndex = new int[numberOfNodes];
+        this.matchIndex = new int[numberOfNodes];
 
         this.network.listen(6666);
 
@@ -91,8 +93,17 @@ public class Node {
 
     public Role leader() throws InvalidProtocolBufferException {
 
+        for(int i = 0; i < numberOfNodes; i++) {
+            this.matchIndex[i] = -1;
+            this.nextIndex[i] = this.log.size();
+        }
+
         //upon election: send initial empty AppendEntries RPCs (heartbeat) to each server; repeat during idle periods to prevent election timeouts
-        AppendEntries appendEntriesHeartbeat = AppendEntries.newBuilder().addEntries(AppendEntries.Entry.newBuilder().setTermNumber(this.currentTerm).setMessage("")).build();
+        AppendEntries appendEntriesHeartbeat = AppendEntries.newBuilder()
+                .addEntries(AppendEntries.Entry.newBuilder()
+                        .setTermNumber(this.currentTerm)
+                        .setMessage(""))
+                .build();
 
         byte[] dataToSend = appendEntriesHeartbeat.toByteArray();
 
@@ -484,7 +495,7 @@ public class Node {
     //receive a message from network class
     public void newMessage(int type, byte[] data) throws InvalidProtocolBufferException {
         MessageWrapper wrapper = new MessageWrapper(type, data);
-        System.out.println("ADDING MESSAGE TO QUEUE OF TYPE: " + type + " BUT GOT " + wrapper.getMessageType());
+        System.out.println("ADDING MESSAGE TO QUEUE OF TYPE: " + type);
         messages.add(wrapper);
     }
 

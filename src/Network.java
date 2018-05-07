@@ -51,37 +51,9 @@ public class Network {
 
             } catch(IOException e) {
                 System.err.println("Could not establish connection to " + destination + " on port 6666");
-                e.printStackTrace();
             }
         }).start();
     }
-
-
-    void printMessageBeforeConnection(int type, byte[] payload) throws InvalidProtocolBufferException {
-        switch (type) {
-            case 1:
-                RequestVoteProtos.RequestVote requestVote = RequestVoteProtos.RequestVote.parseFrom(payload);
-                System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  " REQUESTVOTE");
-                System.out.println(requestVote.toString());
-                break;
-            case 2:
-                AppendEntriesProtos.AppendEntries appendEntries = AppendEntriesProtos.AppendEntries.parseFrom(payload);
-                System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  " APPEND ENTRIES");
-                System.out.println(appendEntries.toString());
-                break;
-            case 3:
-                RequestVoteResponseProtos.RequestVoteResponse requestVoteResponse =  RequestVoteResponseProtos.RequestVoteResponse .parseFrom(payload);
-                System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  " REQUESTVOTERESPONSE");
-                System.out.println(requestVoteResponse.toString());
-                break;
-            case 4:
-                AppendEntriesResponseProtos.AppendEntriesResponse appendEntriesResponse = AppendEntriesResponseProtos.AppendEntriesResponse.parseFrom(payload);
-                System.out.println("BEFORE TRYING TO CONNECT, RECEIVED THE FOLLOWING OF TYPE " +  " APPENDENTRIESRESPONSE");
-                System.out.println(appendEntriesResponse.toString());
-                break;
-        }
-    }
-
 
     // 1 for requestVote, 2 for appendEntries, 3 for requestVoteResponse, 4 for appendEntriesResponse
     public void listen(int portNumber) throws IOException {
@@ -123,9 +95,6 @@ public class Network {
                 byte[] payload = new byte[length];
 
                 in.readFully(payload);
-                //in.read(payload, 0, length);
-
-                //printMessage(type, payload);
 
                 node.newMessage(type, payload);
                 socket.close();
@@ -133,33 +102,6 @@ public class Network {
                 e.printStackTrace();
             }
         }
-
-        void printMessage(int type, byte[] payload) throws InvalidProtocolBufferException {
-            switch (type) {
-                case 1:
-                    RequestVoteProtos.RequestVote requestVote = RequestVoteProtos.RequestVote.parseFrom(payload);
-                    System.out.println("CONNECTION ESTABLISHED: RECEIVED THE FOLLOWING OF TYPE: " + " REQUESTVOTE");
-                    System.out.println(requestVote.toString());
-                    break;
-                case 2:
-                    AppendEntriesProtos.AppendEntries appendEntries = AppendEntriesProtos.AppendEntries.parseFrom(payload);
-                    System.out.println("CONNECTION ESTABLISHED: RECEIVED THE FOLLOWING OF TYPE: " +  "APPEND ENTRIES");
-                    System.out.println(appendEntries.toString());
-                    break;
-                case 3:
-                    RequestVoteResponseProtos.RequestVoteResponse requestVoteResponse =  RequestVoteResponseProtos.RequestVoteResponse .parseFrom(payload);
-                    System.out.println("CONNECTION ESTABLISHED: RECEIVED THE FOLLOWING OF TYPE: " + " REQUESTVOTERESPONSE");
-                    System.out.println(requestVoteResponse.toString());
-                    break;
-                case 4:
-                    AppendEntriesResponseProtos.AppendEntriesResponse appendEntriesResponse = AppendEntriesResponseProtos.AppendEntriesResponse.parseFrom(payload);
-                    System.out.println("CONNECTION ESTABLISHED: RECEIVED THE FOLLOWING OF TYPE: " + " APPENDENTRIESRESPONSE");
-                    System.out.println(appendEntriesResponse.toString());
-                    break;
-            }
-        }
-
-
 
     }
 
