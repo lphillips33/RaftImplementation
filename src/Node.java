@@ -53,7 +53,7 @@ public class Node {
         this.lastAppliedIndex = 0;
         this.nextIndex = null;
         this.matchIndex = null;
-        this.electionTimeout = ONE_SEC + computeElectionTimeout(100_000_000, 250_000_000);
+        this.electionTimeout = ONE_SEC + computeElectionTimeout(250_000_000, 100_000_000);
         this.leaderId = "0";
 
 
@@ -168,7 +168,7 @@ public class Node {
                     case 1: //RequestVote
 
                         requestVote = RequestVote.parseFrom(data);
-                        int term = requestVote.getTerm();
+                        termT = requestVote.getTerm();
 
                         //String destination =  requestVote.getCandidateId();
                         String destination = requestVote.getCandidateId().substring(requestVote.getCandidateId().lastIndexOf("/") + 1);
@@ -176,26 +176,26 @@ public class Node {
                         RequestVoteResponse requestVoteResponse = null; //respond to the candidate
 
                         //Reply false if term < currentTerm
-                        if (term < currentTerm) {
+                        if (termT < currentTerm) {
                             requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(this.currentTerm).setVoteGranted(false).build();
                         }
 
                         //If votedFor is null or candidateId, and candidate's log is at least as up-to-data as
-                        //receiver's log, grant vote.  not sure about the part after &&
-                        if ((this.votedFor == null || votedFor.equals(requestVote.getCandidateId())) && requestVote.getLastLogIndex() >= this.lastAppliedIndex) {
-                            requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(term).setVoteGranted(true).build();
+                        //receiver's log, grant vote.  not sure about the part after &&                     //TODO fix this check
+                        else if ((this.votedFor == null || votedFor.equals(requestVote.getCandidateId())) && requestVote.getLastLogIndex() >= this.lastAppliedIndex) {
+                            requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(termT).setVoteGranted(true).build();
                             //this.votedFor = requestVote.getCandidateId();
                             this.votedFor = requestVote.getCandidateId().substring(requestVote.getCandidateId().lastIndexOf("/") + 1);
 
                             lastTimeSinceGrantedVoteToCandidate = System.nanoTime();
+                        } else {
+                            requestVoteResponse = RequestVoteResponse.newBuilder().setTerm(this.currentTerm).setVoteGranted(false).build();
                         }
 
                         byte[] dataToSend = requestVoteResponse.toByteArray();
 
                         System.out.println("I am a follower: Sending RequestVote " + destination);
                         network.sendMessage(destination, 3, dataToSend);
-
-                        termT = requestVote.getTerm();
 
                         break;
 
@@ -205,7 +205,7 @@ public class Node {
                         lastTimeSinceReceivedAppendEntriesFromLeader = System.nanoTime();
 
                         appendEntries = AppendEntries.parseFrom(data);
-                        term = appendEntries.getTerm();
+                        termT = appendEntries.getTerm();
 
                         AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
 
@@ -213,7 +213,7 @@ public class Node {
                         //destination = appendEntries.getLeaderId();
 
                         //reply false if term < currentTerm
-                        if (term < currentTerm) {
+                        if (termT < currentTerm) {
                             appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
                         }
 
