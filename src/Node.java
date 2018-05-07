@@ -38,6 +38,7 @@ public class Node {
     private String leaderId; //current leader
 
     ConcurrentLinkedQueue<MessageWrapper> messages; //holds our messages.  This is how we respond.
+    ConcurrentLinkedQueue<String> clientMessages;
 
     public enum Role {
         FOLLOWER, LEADER, CANDIDATE
@@ -73,6 +74,7 @@ public class Node {
         this.network.listen(6666);
 
         messages = new ConcurrentLinkedQueue<MessageWrapper>();
+        clientMessages = new ConcurrentLinkedQueue<String>();
     }
 
     public void run() throws UnknownHostException, InvalidProtocolBufferException {
@@ -118,6 +120,15 @@ public class Node {
 
         while (true) {
 
+            /*
+            ArrayList<String> commandsToAppendToLog = new ArrayList<String>();
+            while(clientMessages != null && !clientMessages.isEmpty() && !clientMessages.peek().equals("no")) {
+                String clientMessage = clientMessages.poll();
+                commandsToAppendToLog.add(clientMessage);
+            }
+            */
+
+
             if (commitIndex > lastAppliedIndex) {
                 lastAppliedIndex++;
                 //apply(log.get(lastAppliedIndex));
@@ -154,6 +165,15 @@ public class Node {
                     currentTerm = termT;
                     return Role.FOLLOWER;
                 }
+
+                //If command received from client: append entry to local log
+
+                /*
+                if(!commandsToAppendToLog.isEmpty()) {
+                    LogEntry entry = new LogEntry(currentTerm, commandsToAppendToLog);
+                }
+                */
+
             }
 
 
@@ -506,12 +526,18 @@ public class Node {
         messages.add(wrapper);
     }
 
+    //receive a command from client from network class
+    public void newClientMessage(String command) {
+        clientMessages.add(command);
+    }
+
     //compute random election timeout between 150ms and 350 ms.  150000000, 350000000 are passed in as parameters
     public int computeElectionTimeout(int max, int min) {
         Random r = new Random();
         int result = r.nextInt(max - min) + min;
         return result;
     }
+
 
     public void resetElectionTimer() {
         this.electionStart = System.nanoTime();

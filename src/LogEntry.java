@@ -1,9 +1,18 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class LogEntry {
     private int term;
     private ArrayList<String> commands;
 
+    public LogEntry() {
+
+    }
+
+    public LogEntry(int t, ArrayList<String> c) {
+        this.term = t;
+        this.commands = c;
+    }
 
     public int getTerm() {
         return term;
