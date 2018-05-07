@@ -198,6 +198,8 @@ public class Node {
                 switch (messageType) {
                     case 1: //RequestVote
 
+                        System.out.println("(FOLLOWER) PROCESSING REQUEST VOTE");
+
                         requestVote = RequestVote.parseFrom(data);
                         termT = requestVote.getTerm();
 
@@ -234,6 +236,7 @@ public class Node {
 
                         //received AppendEntriesRequest from leader
                         lastTimeSinceReceivedAppendEntriesFromLeader = System.nanoTime();
+                        System.out.println("(FOLLOWER) PROCESSING APPEND ENTRIES");
 
                         appendEntries = AppendEntries.parseFrom(data);
                         termT = appendEntries.getTerm();
@@ -286,6 +289,7 @@ public class Node {
                     case 3: //RequestVoteResponse
 
                         //If RPC request or response contains term T > currentTerm
+                        System.out.println("(FOLLOWER) PROCESSING REQUEST VOTE RESPONSE");
                         requestVoteResponse = RequestVoteResponse.parseFrom(data);
                         termT = requestVoteResponse.getTerm();
                         System.out.println("I am a follower, I got a RequestVoteResponse");
@@ -293,6 +297,7 @@ public class Node {
                         break;
                     case 4: //AppendEntriesResponse
                         //If RPC request or response contains term T > currentTerm
+                        System.out.println("(FOLLOWER) PROCESSING APPEND ENTRIES RESPONSE");
                         appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
                         termT = appendEntriesResponse.getTerm();
                         System.out.println("I am a follower, got a AppendEntriesResponse");
@@ -323,6 +328,8 @@ public class Node {
             long currentTime = System.nanoTime();
             if (currentTime - lastTimeSinceReceivedAppendEntriesFromLeader > electionTimeout || currentTime - lastTimeSinceGrantedVoteToCandidate > electionTimeout)
                 return Role.CANDIDATE; //begin election to chose a new leader
+
+            System.out.println("Another one");
         }
     }
 
@@ -409,7 +416,7 @@ public class Node {
                         int term = appendEntries.getTerm();
 
                         //If AppendEntries RPC received from new leader: convert to follower
-                        if (requestVote.getCandidateId().equals(leaderId))
+                        if (term >= currentTerm)
                             return Role.FOLLOWER;
 
                         AppendEntriesResponse appendEntriesResponse = null; //respond to the leader
