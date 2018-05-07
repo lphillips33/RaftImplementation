@@ -16,7 +16,7 @@ import com.reber.raft.AppendEntriesResponseProtos.AppendEntriesResponse;
 @SuppressWarnings("Duplicates")
 public class Node {
 
-    private final long ONE_SEC = 1000000000;
+    private final long ONE_SEC = 5000000000l;
 
     private Role role;
     private String nodeId;
@@ -50,7 +50,7 @@ public class Node {
         this.votedFor = "0";
         this.log = new ArrayList<LogEntry>();
         this.commitIndex = -1; //we start at 0, the book starts at 1
-        this.lastAppliedIndex = 0;
+        this.lastAppliedIndex = -1;
         this.nextIndex = null;
         this.matchIndex = null;
         this.electionTimeout = ONE_SEC + computeElectionTimeout(250_000_000, 100_000_000);
@@ -117,9 +117,28 @@ public class Node {
                 int messageType = message.getMessageType();
                 byte[] data = message.getData();
 
-                RequestVoteResponse response = RequestVoteResponse.parseFrom(data);
+                int termT = 0;
 
-                int termT = response.getTerm();
+                switch(messageType){
+                    case(1):
+                        RequestVote requestVote = RequestVote.parseFrom(data);
+                        termT = requestVote.getTerm();
+                        break;
+                    case(2):
+                        AppendEntries appendEntries = AppendEntries.parseFrom(data);
+                        termT = appendEntries.getTerm();
+                        break;
+                    case(3):
+                        RequestVoteResponse requestVoteResponse = RequestVoteResponse.parseFrom(data);
+                        termT = requestVoteResponse.getTerm();
+                        break;
+                    case(4):
+                        AppendEntriesResponse appendEntriesResponse = AppendEntriesResponse.parseFrom(data);
+                        termT = appendEntriesResponse.getTerm();
+                        break;
+                }
+                RequestVoteResponse response = RequestVoteResponse.parseFrom(data);
+                
                 if (termT > currentTerm) {
                     currentTerm = termT;
                     return Role.FOLLOWER;
@@ -134,9 +153,10 @@ public class Node {
                     System.out.println("I AM A LEADER: SENDING HEARTBEATS TO ALL FOLLOWERS " + destination);
                     network.sendMessage(destination, 2, dataToSend);
                 }
+
+                lastTimeHeartBeatSent = System.nanoTime();
             }
 
-            lastTimeHeartBeatSent = System.nanoTime();
         }
     }
 
@@ -194,7 +214,7 @@ public class Node {
 
                         byte[] dataToSend = requestVoteResponse.toByteArray();
 
-                        System.out.println("I am a follower: Sending RequestVote " + destination);
+                        System.out.println("I am a follower: Sending RequestVote Response" + destination);
                         network.sendMessage(destination, 3, dataToSend);
 
                         break;
@@ -218,7 +238,9 @@ public class Node {
                         }
 
                         //Reply false if log doesn't contain an entry at prevLogIndex whose term matches prevLogTerm
-                        if (!(log.get(appendEntries.getPrevLogIndex()).getTerm() == appendEntries.getPrevLogTerm())) {
+                        if (log.size() <= appendEntries.getPrevLogIndex() ||
+                                log.get(appendEntries.getPrevLogIndex()).getTerm() != appendEntries.getPrevLogTerm()) {
+
                             appendEntriesResponse = AppendEntriesResponse.newBuilder().setTerm(this.currentTerm).setSuccess(false).build();
                         }
 
@@ -266,11 +288,14 @@ public class Node {
                         break;
                 }
 
+
                 //If RPC request or response contains term T > currentTerm: set currentTerm = T, convert to follower
-                termT = appendEntries.getTerm();
-                if (termT > currentTerm) {
-                    currentTerm = termT;
-                    return Role.FOLLOWER;
+                if(appendEntries != null) {
+                    termT = appendEntries.getTerm();
+                    if (termT > currentTerm) {
+                        currentTerm = termT;
+                        return Role.FOLLOWER;
+                    }
                 }
             }
 

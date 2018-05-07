@@ -125,7 +125,7 @@ public class Network {
                 in.readFully(payload);
                 //in.read(payload, 0, length);
 
-                printMessage(type, payload);
+                //printMessage(type, payload);
 
                 node.newMessage(type, payload);
                 socket.close();
