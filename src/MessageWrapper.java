@@ -1,4 +1,3 @@
-
 //1 for requestVote, 2 for appendEntries, 3 for RequestVoteResponse, 4 for AppendEntriesResponse
 public class MessageWrapper {
     private int messageType;

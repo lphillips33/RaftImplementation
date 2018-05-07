@@ -1,11 +1,6 @@
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.reber.raft.AppendEntriesProtos;
-import com.reber.raft.AppendEntriesResponseProtos;
-import com.reber.raft.RequestVoteProtos;
-import com.reber.raft.RequestVoteResponseProtos;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
